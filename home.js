@@ -1,10 +1,3 @@
-﻿const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const currency = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 2 });
-const formatCurrency = (amount) => currency.format(amount);
-
-const topbar = document.querySelector('.topbar');
-window.addEventListener('scroll', () => topbar?.classList.toggle('scrolled', window.scrollY > 12));
-
 const engineNodes = document.querySelectorAll('.engine-node');
 engineNodes.forEach((node) => {
   const activate = () => {
@@ -34,194 +27,6 @@ if (storyVisual && 'IntersectionObserver' in window) {
   }, { threshold: 0.2 });
   observer.observe(storyVisual);
 }
-
-const form = document.getElementById('transactionForm');
-const rows = document.getElementById('journalRows');
-const status = document.getElementById('journalStatus');
-const storageKey = 'accounting-cycle-transactions';
-const setupStorageKey = 'accounting-cycle-workspace';
-const setupOverlay = document.getElementById('workspaceSetupOverlay');
-const setupForm = document.getElementById('workspaceSetupForm');
-const setupError = document.getElementById('setupError');
-const localISODate = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-const today = localISODate();
-let workspaceSetup = null;
-try { workspaceSetup = JSON.parse(localStorage.getItem(setupStorageKey) || 'null'); } catch { workspaceSetup = null; }
-let entries = [];
-try { entries = JSON.parse(localStorage.getItem(storageKey) || '[]'); if (!Array.isArray(entries)) entries = []; } catch { entries = []; }
-let draftEntries = [];
-
-function openWorkspaceSetup() {
-  if (!setupOverlay || !setupForm) return;
-  const settingsButton = document.getElementById('editWorkspaceSetup');
-  if (settingsButton) settingsButton.textContent = workspaceSetup ? 'Workspace settings' : 'Set up workspace';
-  setupForm.elements.companyName.value = workspaceSetup?.companyName || '';
-  setupForm.elements.asOfDate.value = workspaceSetup?.asOfDate || today;
-  setupForm.elements.yearEndDate.value = workspaceSetup?.yearEndDate || `${today.slice(0, 4)}-12-31`;
-  if (setupError) setupError.textContent = '';
-  setupOverlay.hidden = false;
-  document.querySelector('.workspace-main')?.setAttribute('inert', '');
-  document.querySelector('.workspace-page > .topbar')?.setAttribute('inert', '');
-  document.querySelector('.workspace-page > .professional-footer')?.setAttribute('inert', '');
-  setupForm.elements.companyName.focus();
-}
-function requireWorkspace() {
-  if (workspaceSetup) return true;
-  openWorkspaceSetup();
-  return false;
-}
-if (setupOverlay && !workspaceSetup) openWorkspaceSetup();
-if (setupOverlay && workspaceSetup) setupOverlay.hidden = true;
-setupForm?.addEventListener('submit', (event) => {
-  event.preventDefault();
-  const companyName = setupForm.elements.companyName.value.trim();
-  const asOfDate = setupForm.elements.asOfDate.value;
-  const yearEndDate = setupForm.elements.yearEndDate.value;
-  if (!companyName || !asOfDate || !yearEndDate) return;
-  workspaceSetup = { companyName, asOfDate, yearEndDate };
-  localStorage.setItem(setupStorageKey, JSON.stringify(workspaceSetup));
-  const settingsButton = document.getElementById('editWorkspaceSetup');
-  if (settingsButton) settingsButton.textContent = 'Workspace settings';
-  const companyNameDisplay = document.getElementById('workspaceCompanyName');
-  if (companyNameDisplay) companyNameDisplay.textContent = `${companyName} · Journal period through ${formatDate(yearEndDate)}`;
-  setupOverlay.hidden = true;
-  document.querySelector('.workspace-main')?.removeAttribute('inert');
-  document.querySelector('.workspace-page > .topbar')?.removeAttribute('inert');
-  document.querySelector('.workspace-page > .professional-footer')?.removeAttribute('inert');
-  const entryDate = document.getElementById('entryDate');
-  if (entryDate && !entryDate.value) entryDate.value = asOfDate;
-  renderEntries();
-});
-document.getElementById('editWorkspaceSetup')?.addEventListener('click', openWorkspaceSetup);
-document.getElementById('cancelSetup')?.addEventListener('click', () => {
-  if (!setupOverlay) return;
-  if (!workspaceSetup) {
-    window.location.href = 'index.html';
-    return;
-  }
-  setupOverlay.hidden = true;
-  document.querySelector('.workspace-main')?.removeAttribute('inert');
-  document.querySelector('.workspace-page > .topbar')?.removeAttribute('inert');
-  document.querySelector('.workspace-page > .professional-footer')?.removeAttribute('inert');
-});
-document.querySelectorAll('[data-calendar-for]').forEach((button) => button.addEventListener('click', () => {
-  const input = document.getElementById(button.dataset.calendarFor);
-  if (!input) return;
-  if (input.closest('.workspace-main') && !requireWorkspace()) return;
-  try { if (typeof input.showPicker === 'function') input.showPicker(); else { input.focus(); input.click(); } }
-  catch { input.focus(); }
-}));
-
-function formatDate(value) {
-  if (!value) return '—';
-  const date = new Date(`${value}T00:00:00`);
-  return Number.isNaN(date.valueOf()) ? '—' : new Intl.DateTimeFormat('en-PH', { dateStyle: 'medium' }).format(date);
-}
-function getEntryDate(entry) { return entry.entryDate || (entry.date ? entry.date.slice(0, 10) : today); }
-
-function renderEntries() {
-  if (!rows) return;
-  const fmt = (n) => formatCurrency(n);
-  const groups = new Map();
-  entries.forEach((entry, index) => {
-    const key = entry.transactionId || `legacy-${index}`;
-    const group = groups.get(key) || { entryDate: getEntryDate(entry), note: entry.note || '', saved: true };
-    group[entry.type === 'Debit' ? 'debit' : 'credit'] = { account: entry.account, amount: Number(entry.amount) };
-    groups.set(key, group);
-  });
-  const journalGroups = [...groups.values(), ...draftEntries.map((entry) => ({ ...entry, saved: false }))];
-  rows.innerHTML = journalGroups.map((group) => {
-    const hasDebit = Boolean(group.debit);
-    const hasCredit = Boolean(group.credit);
-    const lineCount = Number(hasDebit) + Number(hasCredit) + Number(Boolean(group.note));
-    const dateCell = `<td class="journal-date-cell" rowspan="${Math.max(lineCount,1)}">${formatDate(group.entryDate)}${group.saved ? '' : '<small class="draft-label">Draft</small>'}</td>`;
-    const debitRow = hasDebit ? `<tr class="journal-entry-row${group.saved ? '' : ' is-draft'}">${dateCell}<td class="particular-debit"><strong>${escapeHTML(group.debit.account)}</strong></td><td class="debit-cell">${fmt(group.debit.amount)}</td><td></td></tr>` : '';
-    const creditDateCell = hasDebit ? '' : dateCell;
-    const creditRow = hasCredit ? `<tr class="journal-entry-row${group.saved ? '' : ' is-draft'}">${creditDateCell}<td class="particular-credit"><strong>${escapeHTML(group.credit.account)}</strong></td><td></td><td class="credit-cell">${fmt(group.credit.amount)}</td></tr>` : '';
-    const noteRow = group.note ? `<tr class="journal-note-row${group.saved ? '' : ' is-draft'}">${!hasDebit && !hasCredit ? dateCell : ''}<td class="journal-note-cell" colspan="3">${escapeHTML(group.note)}</td></tr>` : '';
-    return `${debitRow}${creditRow}${noteRow}`;
-  }).join('');
-  const debit = entries.filter((entry) => entry.type === 'Debit').reduce((sum, entry) => sum + Number(entry.amount), 0) + draftEntries.reduce((sum, entry) => sum + entry.debitAmount, 0);
-  const credit = entries.filter((entry) => entry.type === 'Credit').reduce((sum, entry) => sum + Number(entry.amount), 0) + draftEntries.reduce((sum, entry) => sum + entry.creditAmount, 0);
-  document.getElementById('debitTotal')?.replaceChildren(document.createTextNode(fmt(debit)));
-  document.getElementById('creditTotal')?.replaceChildren(document.createTextNode(fmt(credit)));
-  document.getElementById('differenceValue')?.replaceChildren(document.createTextNode(fmt(Math.abs(debit - credit))));
-  const balanced = journalGroups.length > 0 && Math.round(debit * 100) === Math.round(credit * 100);
-  if (status) { status.textContent = !journalGroups.length ? 'Add an entry to start your journal.' : draftEntries.length ? `${draftEntries.length} draft ${draftEntries.length === 1 ? 'entry' : 'entries'} added. Finish & Save Journal to post them.` : balanced ? '✓ Journal saved and balanced.' : 'Saved entries need balancing.'; status.className = `journal-status${balanced ? ' success' : journalGroups.length ? ' error' : ''}`; }
-  const summaryStatus = document.getElementById('balanceLabel');
-  if (summaryStatus) summaryStatus.textContent = !journalGroups.length ? 'No entries yet' : balanced ? 'Journal is balanced' : 'Journal needs balancing';
-  const journalSummaryStatus = document.getElementById('journalSummaryStatus');
-  if (journalSummaryStatus) journalSummaryStatus.textContent = !journalGroups.length ? 'No entries yet.' : balanced ? 'All journal entries are balanced.' : 'Review the saved entries; debits and credits differ.';
-  document.getElementById('entryCount')?.replaceChildren(document.createTextNode(String(journalGroups.length)));
-  document.getElementById('emptyJournal')?.classList.toggle('is-hidden', journalGroups.length > 0);
-  localStorage.setItem(storageKey, JSON.stringify(entries));
-}
-function escapeHTML(value) { return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]); }
-form?.addEventListener('submit', (event) => {
-  event.preventDefault();
-  if (!requireWorkspace()) return;
-  const debitAccount = document.getElementById('debitAccountName').value.trim();
-  const debitAmount = Number(document.getElementById('debitAmountValue').value);
-  const creditAccount = document.getElementById('creditAccountName').value.trim();
-  const creditAmount = Number(document.getElementById('creditAmountValue').value);
-  const entryDate = document.getElementById('entryDate')?.value;
-  const note = document.getElementById('entryNote')?.value.trim() || '';
-  if (!debitAccount || !creditAccount || !Number.isFinite(debitAmount) || !Number.isFinite(creditAmount) || debitAmount <= 0 || creditAmount <= 0 || !entryDate) { status.textContent = 'Complete the date, both accounts, and both amounts.'; status.className = 'journal-status error'; return; }
-  if (Math.round(debitAmount * 100) !== Math.round(creditAmount * 100)) { status.textContent = 'Debit and credit amounts must match before you add this entry.'; status.className = 'journal-status error'; return; }
-  draftEntries.push({ debitAccount, debitAmount, creditAccount, creditAmount, note, entryDate });
-  const savedDate = entryDate;
-  form.reset();
-  document.getElementById('entryDate').value = savedDate;
-  renderEntries();
-  document.getElementById('debitAccountName')?.focus();
-});
-document.getElementById('finishJournal')?.addEventListener('click', () => {
-  if (!requireWorkspace()) return;
-  if (!draftEntries.length) {
-    if (status) { status.textContent = 'Add at least one entry before saving the journal.'; status.className = 'journal-status error'; }
-    return;
-  }
-  draftEntries.forEach((entry) => {
-    const transactionId = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    entries.push({ transactionId, account: entry.debitAccount, amount: entry.debitAmount, type: 'Debit', note: entry.note, entryDate: entry.entryDate });
-    entries.push({ transactionId, account: entry.creditAccount, amount: entry.creditAmount, type: 'Credit', note: entry.note, entryDate: entry.entryDate });
-  });
-  draftEntries = [];
-  renderEntries();
-});
-document.getElementById('clearEntries')?.addEventListener('click', () => {
-  if (!requireWorkspace()) return;
-  if (!entries.length && !draftEntries.length) return;
-  entries = [];
-  draftEntries = [];
-  renderEntries();
-});
-window.addEventListener('storage', (event) => { if (event.key === storageKey) { try { entries = JSON.parse(event.newValue || '[]'); } catch { entries = []; } renderEntries(); renderHomeDashboard(); } });
-window.addEventListener('storage', (event) => {
-  if (event.key === setupStorageKey) {
-    try { workspaceSetup = JSON.parse(event.newValue || 'null'); } catch { workspaceSetup = null; }
-    if (workspaceSetup && setupOverlay) {
-      setupOverlay.hidden = true;
-      document.querySelector('.workspace-main')?.removeAttribute('inert');
-      document.querySelector('.workspace-page > .topbar')?.removeAttribute('inert');
-      document.querySelector('.workspace-page > .professional-footer')?.removeAttribute('inert');
-    }
-    const companyNameDisplay = document.getElementById('workspaceCompanyName');
-    if (companyNameDisplay && workspaceSetup) companyNameDisplay.textContent = `${workspaceSetup.companyName} · Journal period through ${formatDate(workspaceSetup.yearEndDate)}`;
-    renderHomeDashboard();
-  }
-});
-if (workspaceSetup) {
-  const companyNameDisplay = document.getElementById('workspaceCompanyName');
-  if (companyNameDisplay) companyNameDisplay.textContent = `${workspaceSetup.companyName} · Journal period through ${formatDate(workspaceSetup.yearEndDate)}`;
-  const entryDate = document.getElementById('entryDate');
-  if (entryDate && !entryDate.value) entryDate.value = workspaceSetup?.asOfDate || today;
-}
-else {
-  const entryDate = document.getElementById('entryDate');
-  if (entryDate && !entryDate.value) entryDate.value = today;
-}
-renderEntries();
 
 const homeDashboard = document.getElementById('activityChartContent');
 let chartRange = 'monthly';
@@ -415,3 +220,13 @@ if (calculator) {
   calculator.addEventListener('reset', () => window.setTimeout(updateCalculator, 0));
   updateCalculator();
 }
+window.addEventListener('storage', (event) => {
+  if (event.key === storageKey) {
+    try { entries = JSON.parse(event.newValue || '[]'); if (!Array.isArray(entries)) entries = []; } catch { entries = []; }
+    renderHomeDashboard();
+  }
+  if (event.key === setupStorageKey) {
+    try { workspaceSetup = JSON.parse(event.newValue || 'null'); } catch { workspaceSetup = null; }
+    renderHomeDashboard();
+  }
+});

@@ -6,7 +6,9 @@
   <meta name="description" content="Set up your journal and manage accounting transactions." />
   <title>Transactions · Accounting Cycle</title>
   <link rel="icon" type="image/png" href="assets/logo.png" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="stylesheet" href="transactions.css" />
 </head>
 <body class="workspace-page">
   <header class="topbar"><div class="shell topbar-inner">
@@ -50,21 +52,26 @@
         <div class="card-heading"><div><p class="eyebrow">Journal workspace</p><h2>Enter a transaction</h2></div><span class="card-icon">＋</span></div>
         <form id="transactionForm" class="transaction-form journal-composer">
           <div class="composer-date"><label for="entryDate">Transaction date</label><div class="calendar-control"><input id="entryDate" name="entryDate" type="date" required /><button class="date-picker-button" type="button" data-calendar-for="entryDate" aria-label="Open transaction date calendar"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 2v3m10-3v3M4 9h16M5 4h14a1 1 0 0 1 1 1v14H4V5a1 1 0 0 1 1-1Zm3 9h2m3 0h2m-7 4h2m3 0h2" /></svg></button></div></div>
-          <fieldset class="account-details debit-details"><legend>Debit account details</legend><label for="debitAccountName">Debit to: Account</label><input id="debitAccountName" name="debitAccount" type="text" placeholder="e.g. Cash" autocomplete="off" required /><label for="debitAmountValue">Debit to: Amount</label><div class="money-input"><span>₱</span><input id="debitAmountValue" name="debitAmount" type="number" placeholder="0.00" min="0.01" step="0.01" inputmode="decimal" required /></div></fieldset>
-          <fieldset class="account-details credit-details"><legend>Credit account details</legend><label for="creditAccountName">Credit to: Account</label><input id="creditAccountName" name="creditAccount" type="text" placeholder="e.g. Owner's Capital" autocomplete="off" required /><label for="creditAmountValue">Credit to: Amount</label><div class="money-input"><span>₱</span><input id="creditAmountValue" name="creditAmount" type="number" placeholder="0.00" min="0.01" step="0.01" inputmode="decimal" required /></div></fieldset>
+          <fieldset class="account-details debit-details"><legend>Debit</legend><div class="account-field"><label for="debitAccountName">Account</label><input id="debitAccountName" name="debitAccount" type="text" placeholder="e.g. Cash" autocomplete="off" required /></div><div class="account-field"><label for="debitAmountValue">Amount</label><div class="money-input"><span>₱</span><input id="debitAmountValue" name="debitAmount" type="number" placeholder="0.00" min="0.01" step="0.01" inputmode="decimal" required /></div></div></fieldset>
+          <fieldset class="account-details credit-details"><legend>Credit</legend><div class="account-field"><label for="creditAccountName">Account</label><input id="creditAccountName" name="creditAccount" type="text" placeholder="e.g. Owner's Capital" autocomplete="off" required /></div><div class="account-field"><label for="creditAmountValue">Amount</label><div class="money-input"><span>₱</span><input id="creditAmountValue" name="creditAmount" type="number" placeholder="0.00" min="0.01" step="0.01" inputmode="decimal" required /></div></div></fieldset>
           <label class="note-field" for="entryNote">Note <small>(optional)</small><textarea id="entryNote" name="note" rows="2" placeholder="Add a note about this transaction"></textarea></label>
-          <p id="journalStatus" class="journal-status" role="status" aria-live="polite">Add an entry to start your journal.</p>
-          <div class="composer-actions"><button class="btn btn-solid add-entry-button" type="submit">Add Entry <span aria-hidden="true">＋</span></button><button id="finishJournal" class="finish-journal-button" type="button">Finish &amp; Save Journal</button></div>
-          <p class="form-hint">Debit and credit amounts must match before the journal can be saved.</p>
+          <p id="journalStatus" class="journal-status" role="status" aria-live="polite">Add an entry to post it to the general journal.</p>
+          <div class="composer-actions"><button class="btn btn-solid add-entry-button" type="submit">Add to journal <span aria-hidden="true">＋</span></button><button id="finishJournal" class="finish-journal-button" type="button">Finish &amp; View Ledger</button></div>
+          <p class="form-hint">Balanced entries are posted to the general journal immediately.</p>
         </form>
       </section>
       <section class="workspace-card journal-card">
-        <div class="card-heading journal-heading"><div><p class="eyebrow">Saved and draft entries</p><h2>General Journal <span class="entry-count" id="entryCount">0</span></h2></div><button id="clearEntries" class="text-button" type="button">Clear all</button></div>
+        <div class="card-heading journal-heading"><div><p class="eyebrow">Posted transactions</p><h2>General Journal <span class="entry-count" id="entryCount">0</span></h2></div><button id="clearEntries" class="text-button" type="button">Clear all</button></div>
         <div class="journal-result journal-table-wrap"><table class="general-journal-table"><thead><tr><th>Date</th><th>Particulars</th><th>Debit</th><th>Credit</th></tr></thead><tbody id="journalRows"></tbody></table><div id="emptyJournal" class="empty-journal"><span>＋</span><strong>Your journal starts here</strong><p>Complete the debit and credit details, then add the entry.</p></div></div>
         <div class="totals-wrap"><div><span>Total debits</span><strong id="debitTotal">₱0.00</strong></div><div><span>Total credits</span><strong id="creditTotal">₱0.00</strong></div><div class="difference-total"><span>Difference</span><strong id="differenceValue">₱0.00</strong></div></div>
         <p id="journalSummaryStatus" class="journal-status journal-summary-status" role="status" aria-live="polite">No entries yet.</p>
       </section>
-    </div>    <a class="back-link" href="index.html">← Back to accounting overview</a>
+    </div>
+    <section id="ledgerSection" class="workspace-card ledger-section" aria-labelledby="ledgerTitle" hidden>
+      <div class="card-heading ledger-heading"><div><p class="eyebrow">Posted account activity</p><h2 id="ledgerTitle">General Ledger <span id="ledgerAccountCount" class="entry-count">0</span></h2><p class="ledger-intro">Journal entries grouped by account, with debit and credit sides.</p></div><div class="ledger-controls"><label class="ledger-search" for="ledgerSearch"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 5 5"></path></svg><input id="ledgerSearch" type="search" placeholder="Search accounts…" autocomplete="off" /></label><label class="ledger-filter-control" for="ledgerAccountFilter"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16l-6.2 7.1v5.5l-3.6 1.8v-7.3L4 5Z"></path></svg><select id="ledgerAccountFilter"><option value="">All Accounts</option></select></label><button id="backToJournal" class="text-button" type="button">← Back to Journal</button></div></div>
+      <div id="ledgerAccounts" class="ledger-account-grid"></div>
+    </section>
+    <a class="back-link" href="index.html">← Back to accounting overview</a>
   </main>
   <footer class="site-footer professional-footer">
     <div class="shell footer-inner">
@@ -74,6 +81,7 @@
       <small class="footer-copyright">© 2026 Accounting Cycle</small>
     </div>
   </footer>
-  <script src="script.js"></script>
+  <script src="app-core.js"></script>
+  <script src="transactions.js"></script>
 </body>
 </html>

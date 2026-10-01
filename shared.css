@@ -84,6 +84,29 @@
   color: var(--blue);
   font-size: 1.3rem;
 }
+.card-icon svg,
+.empty-journal > span svg,
+.draft-reminder-icon svg,
+.metric-icon svg,
+.chart-icon svg,
+.add-entry-button span svg,
+.calculator-symbol svg,
+.recent-item-icon svg,
+.empty-mark svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+.card-icon svg { width: 20px; height: 20px; }
+.add-entry-button span svg { width: 17px; height: 17px; vertical-align: -4px; }
+.empty-journal > span svg,
+.empty-mark svg { width: 23px; height: 23px; }
+.calculator-symbol svg { width: 24px; height: 24px; }
+.chart-icon svg { width: 17px; height: 17px; vertical-align: -3px; }
 .workspace-page .transaction-form {
   display: grid;
   grid-template-columns: 1fr;

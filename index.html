@@ -79,7 +79,7 @@
 
         <aside id="draftReminder" class="draft-reminder" aria-live="polite" hidden>
           <div class="draft-reminder-heading">
-            <span class="draft-reminder-icon" aria-hidden="true">▤</span>
+            <span class="draft-reminder-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 4.75h12.5A1.5 1.5 0 0 1 19 6.25v13H5a2 2 0 0 1-2-2v-11a1.5 1.5 0 0 1 2-1.5Z"/><path d="M3.5 8H19M7 12h8m-8 3h5"/></svg></span>
             <div><strong>Unfinished transaction</strong><p id="draftReminderSummary">Your saved draft is waiting for you.</p></div>
             <button class="draft-reminder-toggle" type="button" aria-expanded="true" aria-controls="draftReminderDetails" aria-label="Collapse draft reminder">−</button>
             <button class="draft-reminder-close" type="button" aria-label="Close draft reminder">×</button>
@@ -94,28 +94,28 @@
         </aside>
 
         <section class="dashboard-metrics" aria-label="Journal summary">
-          <article class="metric-card metric-debit"><span class="metric-icon">↗</span><div><span class="metric-label">Total debits</span><strong id="homeDebits">₱0.00</strong><small>Across all journal entries</small></div></article>
-          <article class="metric-card metric-credit"><span class="metric-icon">↙</span><div><span class="metric-label">Total credits</span><strong id="homeCredits">₱0.00</strong><small>Across all journal entries</small></div></article>
-          <article class="metric-card metric-balance"><span class="metric-icon">＝</span><div><span class="metric-label">Debit / credit difference</span><strong id="homeDifference">₱0.00</strong><small id="homeBalanceCaption">No entries yet</small></div></article>
-          <article class="metric-card metric-count"><span class="metric-icon">▤</span><div><span class="metric-label">Journal entries</span><strong id="homeEntryCount">0</strong><small>Recorded lines</small></div></article>
+          <article class="metric-card metric-debit"><span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 5v14m0 0 5-5m-5 5-5-5M12 5h7v14h-7"/></svg></span><div><span class="metric-label">Total debits</span><strong id="homeDebits">₱0.00</strong><small>Across all journal entries</small></div></article>
+          <article class="metric-card metric-credit"><span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M17 19V5m0 0-5 5m5-5 5 5M12 19H5V5h7"/></svg></span><div><span class="metric-label">Total credits</span><strong id="homeCredits">₱0.00</strong><small>Across all journal entries</small></div></article>
+          <article class="metric-card metric-balance"><span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v18m-7-15h14M5 6l-3 6h6L5 6Zm14 0-3 6h6l-3-6ZM7 21h10"/></svg></span><div><span class="metric-label">Debit / credit difference</span><strong id="homeDifference">₱0.00</strong><small id="homeBalanceCaption">No entries yet</small></div></article>
+          <article class="metric-card metric-count"><span class="metric-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 3.75h11.5L20 7v13.25H5a2 2 0 0 1-2-2V5.75a2 2 0 0 1 2-2Z"/><path d="M16 4v4h4M8 12h8m-8 4h8"/></svg></span><div><span class="metric-label">Journal entries</span><strong id="homeEntryCount">0</strong><small>Recorded lines</small></div></article>
         </section>
 
         <section class="dashboard-analytics" id="reports" aria-label="Reports and charts">
           <article class="dashboard-panel overview-panel">
-            <div class="dashboard-panel-heading chart-heading"><div><h2><span class="chart-icon">▥</span> Financial overview</h2><p>Debit and credit activity over time</p></div><div class="range-switch" role="group" aria-label="Chart time range"><button type="button" class="is-active" data-chart-range="monthly">Monthly</button><button type="button" data-chart-range="quarterly">Quarterly</button><button type="button" data-chart-range="yearly">Yearly</button></div></div>
+            <div class="dashboard-panel-heading chart-heading"><div><h2><span class="chart-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19V5m0 14h17M8 16v-4m5 4V8m5 8v-7"/></svg></span> Financial overview</h2><p>Debit and credit activity over time</p></div><div class="range-switch" role="group" aria-label="Chart time range"><button type="button" class="is-active" data-chart-range="monthly">Monthly</button><button type="button" data-chart-range="quarterly">Quarterly</button><button type="button" data-chart-range="yearly">Yearly</button></div></div>
             <div class="chart-legend"><span><i class="legend-blue"></i>Debits</span><span><i class="legend-gold"></i>Credits</span></div>
             <div class="activity-chart-wrap"><svg id="activityChart" class="activity-chart" viewBox="0 0 740 270" role="img" aria-label="Journal debit and credit activity chart"><g id="activityChartContent"></g></svg></div>
             <p id="chartEmptyNote" class="chart-empty-note">Your chart will grow as you add journal entries.</p>
           </article>
           <article class="dashboard-panel accounts-panel">
-            <div class="dashboard-panel-heading chart-heading"><div><h2><span class="chart-icon">◉</span> Account activity</h2><p>Journal amounts grouped by account</p></div><span class="small-period-label" id="accountRangeLabel">Monthly</span></div>
+            <div class="dashboard-panel-heading chart-heading"><div><h2><span class="chart-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16"/><circle cx="8" cy="6.5" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="10" cy="17.5" r="2"/></svg></span> Account activity</h2><p>Journal amounts grouped by account</p></div><span class="small-period-label" id="accountRangeLabel">Monthly</span></div>
             <div class="account-breakdown"><div id="accountDonut" class="account-donut"><div class="donut-center"><strong id="accountTotal">₱0.00</strong><span>Activity</span></div></div><div id="accountLegend" class="account-legend"><p class="donut-empty">Account activity will appear here.</p></div></div>
           </article>
         </section>
 
         <section class="dashboard-tools" id="calculator">
           <article class="dashboard-panel home-calculator">
-            <div class="calculator-card-head"><div><span class="calculator-kicker">QUICK CALCULATOR</span><h2><span id="typedGreeting" aria-label="Hello, Bianca!"></span><span class="typing-cursor" aria-hidden="true"></span></h2><p class="greeting-subtitle">A quick estimate, just for you.</p></div><span class="calculator-symbol">₱</span></div>
+            <div class="calculator-card-head"><div><span class="calculator-kicker">QUICK CALCULATOR</span><h2><span id="typedGreeting" aria-label="Hello, Bianca!"></span><span class="typing-cursor" aria-hidden="true"></span></h2><p class="greeting-subtitle">A quick estimate, just for you.</p></div><span class="calculator-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18m-14 5h3m3 0h4m-10 2.5h3"/><circle cx="17" cy="14" r="1.5"/></svg></span></div>
             <form id="profitCalculator" class="calculator-form">
               <label for="calcRevenue">Total revenue</label><div class="calculator-input-wrap"><span>₱</span><input id="calcRevenue" type="number" min="0" step="100" value="0" inputmode="decimal" /></div>
               <label for="calcExpenses">Total expenses</label><div class="calculator-input-wrap"><span>₱</span><input id="calcExpenses" type="number" min="0" step="100" value="0" inputmode="decimal" /></div>

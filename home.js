@@ -78,8 +78,9 @@ function renderHomeDashboard() {
     const latest = [...validEntries].sort((a, b) => getEntryDate(b).localeCompare(getEntryDate(a))).slice(0, 5);
     recentList.innerHTML = latest.length ? latest.map((entry) => {
       const isDebit = entry.type === 'Debit';
-      return `<li class="recent-item${isDebit ? ' is-debit' : ''}"><span class="recent-item-icon" aria-hidden="true">${isDebit ? '↙' : '↗'}</span><span class="recent-item-copy"><strong>${escapeHTML(entry.account || 'Account')}</strong><small>${formatDate(getEntryDate(entry))} · ${isDebit ? 'Debit' : 'Credit'}</small></span><strong class="recent-item-amount">${isDebit ? '−' : '+'}${formatCurrency(Number(entry.amount))}</strong></li>`;
-    }).join('') : '<li class="recent-empty"><span class="empty-mark">＋</span><strong>No transactions yet</strong><small>Your latest entries will appear here.</small></li>';
+      const directionIcon = isDebit ? '<path d="M7 5v14m0 0 5-5m-5 5-5-5M12 5h7v14h-7"/>' : '<path d="M17 19V5m0 0-5 5m5-5 5 5M12 19H5V5h7"/>';
+      return `<li class="recent-item${isDebit ? ' is-debit' : ''}"><span class="recent-item-icon" aria-hidden="true"><svg viewBox="0 0 24 24">${directionIcon}</svg></span><span class="recent-item-copy"><strong>${escapeHTML(entry.account || 'Account')}</strong><small>${formatDate(getEntryDate(entry))} · ${isDebit ? 'Debit' : 'Credit'}</small></span><strong class="recent-item-amount">${isDebit ? '−' : '+'}${formatCurrency(Number(entry.amount))}</strong></li>`;
+    }).join('') : '<li class="recent-empty"><span class="empty-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 3.75h11.5L20 7v13.25H5a2 2 0 0 1-2-2V5.75a2 2 0 0 1 2-2Z"/><path d="M16 4v4h4M8 12h8m-8 4h8"/></svg></span><strong>No transactions yet</strong><small>Your latest entries will appear here.</small></li>';
   }
   renderActivityCharts(validEntries);
 }
@@ -176,7 +177,7 @@ renderHomeDashboard();
 
 const greetingTarget = document.getElementById('typedGreeting');
 if (greetingTarget) {
-  const greeting = 'Hello, Bianca!';
+  const greeting = 'Hello, Maam Bianca!';
   if (prefersReducedMotion) greetingTarget.textContent = greeting;
   else {
     let letter = 0;

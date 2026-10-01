@@ -88,10 +88,19 @@
         </div>
 
         <aside id="draftReminder" class="draft-reminder" aria-live="polite" hidden>
-          <button class="draft-reminder-close" type="button" aria-label="Dismiss draft reminder">×</button>
-          <span class="draft-reminder-icon" aria-hidden="true">▤</span>
-          <div><strong>Unfinished transaction</strong><p>You have a saved draft waiting for you.</p></div>
-          <a href="transactions.html">Continue draft <span aria-hidden="true">→</span></a>
+          <div class="draft-reminder-heading">
+            <span class="draft-reminder-icon" aria-hidden="true">▤</span>
+            <div><strong>Unfinished transaction</strong><p id="draftReminderSummary">Your saved draft is waiting for you.</p></div>
+            <button class="draft-reminder-toggle" type="button" aria-expanded="true" aria-controls="draftReminderDetails" aria-label="Collapse draft reminder">−</button>
+            <button class="draft-reminder-close" type="button" aria-label="Close draft reminder">×</button>
+          </div>
+          <div id="draftReminderDetails" class="draft-reminder-details">
+            <p id="draftReminderDate" hidden></p>
+            <p id="draftReminderAccounts" hidden></p>
+            <p id="draftReminderAmounts" hidden></p>
+            <p id="draftReminderNote" hidden></p>
+            <a href="transactions.html">Continue draft <span aria-hidden="true">→</span></a>
+          </div>
         </aside>
 
         <section class="dashboard-metrics" aria-label="Journal summary">

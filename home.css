@@ -1069,7 +1069,6 @@
   padding: 4px;
   flex-shrink: 0;
   border-radius: 10px;
-  background: #fff;
   box-shadow: 0 2px 9px rgba(17, 42, 77, 0.07);
   object-fit: contain;
 }
@@ -1379,13 +1378,13 @@
 }
 .draft-reminder {
   position: fixed;
-  z-index: 30;
+  z-index: 1000;
   right: max(22px, calc((100vw - 1480px) / 2));
   bottom: 22px;
   display: grid;
-  grid-template-columns: 42px 1fr;
-  gap: 11px 12px;
-  width: min(310px, calc(100vw - 32px));
+  grid-template-columns: 1fr;
+  gap: 12px;
+  width: min(360px, calc(100vw - 32px));
   padding: 18px;
   border: 1px solid #dbe5f1;
   border-radius: 16px;
@@ -1394,12 +1393,18 @@
   animation: draft-reminder-in 220ms ease-out both;
 }
 .draft-reminder[hidden] { display: none; }
+.draft-reminder-heading { display: grid; grid-template-columns: 42px minmax(0, 1fr) 28px 24px; align-items: start; gap: 11px; }
 .draft-reminder-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; background: #edf5ff; color: #2874bd; font-size: 1.2rem; }
-.draft-reminder strong { display: block; padding: 2px 20px 0 0; color: #173655; font-size: 0.9rem; }
+.draft-reminder strong { display: block; padding: 2px 0 0; color: #173655; font-size: 0.9rem; }
 .draft-reminder p { margin: 4px 0 0; color: #718096; font-size: 0.76rem; line-height: 1.45; }
-.draft-reminder > a { grid-column: 2; color: #1767ad; font-size: 0.78rem; font-weight: 750; text-decoration: none; }
-.draft-reminder > a:hover { text-decoration: underline; }
-.draft-reminder-close { position: absolute; top: 9px; right: 10px; border: 0; background: transparent; color: #8190a2; cursor: pointer; font-size: 1.2rem; }
+.draft-reminder-details { display: grid; gap: 5px; padding-left: 54px; }
+.draft-reminder-details p { margin: 0; overflow-wrap: anywhere; }
+.draft-reminder-details a { margin-top: 4px; color: #1767ad; font-size: 0.78rem; font-weight: 750; text-decoration: none; }
+.draft-reminder-details a:hover { text-decoration: underline; }
+.draft-reminder-close, .draft-reminder-toggle { display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 7px; background: transparent; color: #8190a2; cursor: pointer; font-size: 1.15rem; }
+.draft-reminder-close:hover, .draft-reminder-toggle:hover { background: #f1f5fa; color: #173655; }
+.draft-reminder.is-collapsed { width: min(310px, calc(100vw - 32px)); }
+.draft-reminder.is-collapsed .draft-reminder-details { display: none; }
 @keyframes draft-reminder-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 760px) {
   .dashboard-page .topbar-inner,

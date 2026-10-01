@@ -29,6 +29,37 @@ if (storyVisual && 'IntersectionObserver' in window) {
 }
 
 const homeDashboard = document.getElementById('activityChartContent');
+// Keep the fixed reminder attached to the document root so dashboard transforms
+// and stacking contexts cannot clip or bury it.
+const draftReminderNode = document.getElementById('draftReminder');
+if (draftReminderNode && draftReminderNode.parentElement !== document.body) {
+  document.body.append(draftReminderNode);
+}
+let draftReminderDismissed = false;
+function renderDraftReminder() {
+  const reminder = document.getElementById('draftReminder');
+  if (!reminder) return;
+  let draft = null;
+  try { draft = JSON.parse(localStorage.getItem(draftStorageKey) || 'null'); } catch { draft = null; }
+  const hasDraft = draft && typeof draft === 'object' && Object.values(draft).some((value) => String(value || '').trim());
+  reminder.hidden = !hasDraft || draftReminderDismissed;
+  if (!hasDraft) return;
+  const date = document.getElementById('draftReminderDate');
+  const accounts = document.getElementById('draftReminderAccounts');
+  const amounts = document.getElementById('draftReminderAmounts');
+  const note = document.getElementById('draftReminderNote');
+  const summary = document.getElementById('draftReminderSummary');
+  const debitAccount = String(draft.debitAccountName || '').trim();
+  const creditAccount = String(draft.creditAccountName || '').trim();
+  const debitAmount = Number(draft.debitAmountValue) || 0;
+  const creditAmount = Number(draft.creditAmountValue) || 0;
+  const noteText = String(draft.entryNote || '').trim();
+  if (summary) summary.textContent = debitAccount || creditAccount ? `${debitAccount || 'New entry'}${creditAccount ? ` → ${creditAccount}` : ''}` : 'Your saved draft is waiting for you.';
+  if (date) { date.hidden = !draft.entryDate; date.textContent = draft.entryDate ? `Date: ${formatDate(draft.entryDate)}` : ''; }
+  if (accounts) { accounts.hidden = !debitAccount && !creditAccount; accounts.textContent = [debitAccount && `Debit: ${debitAccount}`, creditAccount && `Credit: ${creditAccount}`].filter(Boolean).join(' · '); }
+  if (amounts) { amounts.hidden = !debitAmount && !creditAmount; amounts.textContent = [debitAmount && `Debit ${formatCurrency(debitAmount)}`, creditAmount && `Credit ${formatCurrency(creditAmount)}`].filter(Boolean).join(' · '); }
+  if (note) { note.hidden = !noteText; note.textContent = `Note: ${noteText}`; }
+}
 let chartRange = 'monthly';
 function renderHomeDashboard() {
   if (!document.getElementById('homeDebits')) return;
@@ -42,10 +73,7 @@ function renderHomeDashboard() {
   setText('homeDifference', formatCurrency(difference));
   setText('homeEntryCount', String(validEntries.length));
   setText('homeBalanceCaption', !validEntries.length ? 'No entries yet' : difference === 0 ? 'Journal is balanced' : 'Journal needs balancing');
-  const draftReminder = document.getElementById('draftReminder');
-  if (draftReminder) {
-    try { draftReminder.hidden = !localStorage.getItem(draftStorageKey); } catch { draftReminder.hidden = true; }
-  }
+  renderDraftReminder();
 
   const recentList = document.getElementById('homeRecentTransactions');
   if (recentList) {
@@ -227,9 +255,18 @@ window.addEventListener('storage', (event) => {
     try { workspaceSetup = JSON.parse(event.newValue || 'null'); } catch { workspaceSetup = null; }
     renderHomeDashboard();
   }
-  if (event.key === draftStorageKey) renderHomeDashboard();
+  if (event.key === draftStorageKey) { draftReminderDismissed = false; renderHomeDashboard(); }
 });
 document.querySelector('.draft-reminder-close')?.addEventListener('click', () => {
   const reminder = document.getElementById('draftReminder');
+  draftReminderDismissed = true;
   if (reminder) reminder.hidden = true;
+});
+document.querySelector('.draft-reminder-toggle')?.addEventListener('click', (event) => {
+  const button = event.currentTarget;
+  const reminder = document.getElementById('draftReminder');
+  const collapsed = reminder?.classList.toggle('is-collapsed') || false;
+  button.setAttribute('aria-expanded', String(!collapsed));
+  button.setAttribute('aria-label', collapsed ? 'Expand draft reminder' : 'Collapse draft reminder');
+  button.textContent = collapsed ? '+' : '−';
 });

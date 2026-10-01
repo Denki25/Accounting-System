@@ -10,7 +10,7 @@
   flex-wrap: nowrap;
   justify-content: flex-start;
   gap: clamp(18px, 3vw, 42px);
-  min-height: 72px;
+  min-height: 84px;
   padding: 10px 22px;
   background: rgba(255, 255, 255, 0.82);
   border-color: rgba(8, 102, 229, 0.1);
@@ -31,17 +31,37 @@
 
 .topbar .brand-mark {
   display: block;
-  width: 42px;
-  height: 42px;
+  width: 54px;
+  height: 54px;
   object-fit: contain;
   flex: 0 0 auto;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Page styles set a white tile on the mark; keep the navigation logo clear in both states. */
+.dashboard-page .topbar .brand-mark,
+.workspace-page .topbar .brand-mark,
+.dashboard-page .topbar.scrolled .brand-mark,
+.workspace-page .topbar.scrolled .brand-mark {
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .topbar .brand-wordmark {
   display: block;
-  width: clamp(156px, 17vw, 198px);
-  max-height: 48px;
+  width: clamp(180px, 19vw, 224px);
+  height: auto;
+  max-height: 54px;
   object-fit: contain;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .topbar .main-nav {
@@ -128,8 +148,8 @@
 
 @media (max-width: 900px) {
   .topbar-inner { gap: 16px; padding-inline: 18px; }
-  .topbar .brand-mark { width: 36px; height: 36px; }
-  .topbar .brand-wordmark { width: 156px; }
+  .topbar .brand-mark { width: 46px; height: 46px; }
+  .topbar .brand-wordmark { width: 176px; max-height: 46px; }
   .topbar .main-nav { gap: 14px; }
   .topbar .main-nav a { font-size: 0.84rem; }
 }
@@ -143,9 +163,9 @@
     border-radius: 24px;
   }
   .topbar .brand { margin-right: 0; }
-  .topbar .brand-mark { width: 32px; height: 32px; }
+  .topbar .brand-mark { width: 40px; height: 40px; }
   .topbar .brand-lockup { gap: 6px; }
-  .topbar .brand-wordmark { width: 142px; max-height: 38px; }
+  .topbar .brand-wordmark { width: 156px; max-height: 40px; }
   .topbar .main-nav {
     order: 3;
     width: 100%;

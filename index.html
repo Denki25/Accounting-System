@@ -24,13 +24,17 @@
           <span class="brand-lockup"><img src="assets/tamaraw-mark.png" alt="" class="brand-mark" /><img src="assets/tamaraw-wordmark.png" alt="TAMARAW" class="brand-wordmark" /></span>
         </a>
 
-        <nav class="main-nav" aria-label="Main navigation">
+        <nav class="main-nav" id="mainNavigation" aria-label="Main navigation">
           <a class="is-current" href="index.html" aria-current="page">Home</a>
           <a href="transactions.html">Transactions</a>
           <a href="#calculator">Calculator</a>
           <a href="#reports">Reports</a>
           <a href="#how-it-works">How It Works</a>
         </nav>
+
+        <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mainNavigation">
+          <span></span><span></span><span></span>
+        </button>
 
         <a href="transactions.html" class="btn btn-solid">Open workspace</a>
       </div>
@@ -162,5 +166,6 @@
 
     <script src="app-core.js"></script>
     <script src="home.js"></script>
+    <script src="nav-menu.js"></script>
   </body>
 </html>

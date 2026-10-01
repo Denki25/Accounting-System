@@ -14,10 +14,11 @@
 <body class="workspace-page">
   <header class="topbar"><div class="shell topbar-inner">
     <a class="brand" href="index.html" aria-label="TAMARAW home"><span class="brand-lockup"><img src="assets/tamaraw-mark.png" alt="" class="brand-mark" /><img src="assets/tamaraw-wordmark.png" alt="TAMARAW" class="brand-wordmark" /></span></a>
-    <nav class="main-nav" aria-label="Main navigation">
+    <nav class="main-nav" id="mainNavigation" aria-label="Main navigation">
       <a href="index.html">Home</a><a class="is-current" href="transactions.html" aria-current="page">Transactions</a><a href="index.html#calculator">Calculator</a><a href="index.html#reports">Reports</a><a href="index.html#how-it-works">How It Works</a>
     </nav>
     <a href="#transactionForm" class="btn btn-solid">Open workspace</a>
+    <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mainNavigation"><span></span><span></span><span></span></button>
   </div></header>
 
   <div id="workspaceSetupOverlay" class="setup-overlay" hidden>
@@ -84,5 +85,6 @@
   </footer>
   <script src="app-core.js"></script>
   <script src="transactions.js"></script>
+  <script src="nav-menu.js"></script>
 </body>
 </html>

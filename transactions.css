@@ -957,7 +957,6 @@
   }
 }
 
-/* Use the transparent TAMARAW wordmark at a readable size. */
 .dashboard-page .brand-wordmark,
 .workspace-page .brand-wordmark {
   display: block;

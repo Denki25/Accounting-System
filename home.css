@@ -3,10 +3,9 @@
   background: #fff;
 }
 
-/* Keep the decorative artwork behind the opening dashboard only. */
 .dashboard-home {
   background-color: #fff;
-  background-image: url("assets/homepage-background.png");
+  background-image: linear-gradient(rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.72)), url("assets/homepage-background.png");
   background-position: center top;
   background-repeat: no-repeat;
   background-size: 100% 805px;
@@ -1445,7 +1444,6 @@
   }
 }
 
-/* Animated accounting cycle illustration. */
 .dashboard-hero-art {
   position: relative;
   inset: auto;
@@ -1689,12 +1687,10 @@
   }
 }
 
-/* Tamaraw identity in the dashboard brand card. */
 .art-logo-card .art-logo-mark { width: 52px; height: 52px; object-fit: contain; }
 .art-logo-card .art-logo-wordmark { width: min(100%, 180px); height: auto; max-height: 28px; object-fit: contain; }
 @media (max-width: 760px) { .art-logo-card .art-logo-mark { width: 38px; height: 38px; } .art-logo-card .art-logo-wordmark { max-height: 20px; } }
 
-/* Use the transparent TAMARAW wordmark at a readable size. */
 .dashboard-page .brand-wordmark,
 .workspace-page .brand-wordmark {
   display: block;
@@ -1722,4 +1718,37 @@
   .dashboard-page .brand-wordmark,
   .workspace-page .brand-wordmark { width: 156px; max-height: 34px; }
   .professional-footer .footer-brand .brand-wordmark { width: 150px; max-height: 32px; }
+}
+
+.dashboard-hero-card {
+  grid-template-columns: minmax(0, 1fr);
+}
+.dashboard-hero-card::before {
+  content: none;
+}
+.dashboard-hero-copy {
+  width: 100%;
+}
+.dashboard-cycle-slot {
+  display: grid;
+  min-width: 0;
+  place-items: center;
+}
+.dashboard-cycle-slot .dashboard-hero-art {
+  right: auto;
+  width: min(100%, 500px);
+  margin-inline: auto;
+}
+.dashboard-cycle-slot .art-orbit {
+  display: none;
+}
+@media (max-width: 1120px) {
+  .dashboard-cycle-slot .dashboard-hero-art {
+    width: min(100%, 460px);
+  }
+}
+@media (max-width: 760px) {
+  .dashboard-cycle-slot .dashboard-hero-art {
+    width: min(100%, 400px);
+  }
 }

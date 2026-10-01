@@ -29,8 +29,6 @@ if (storyVisual && 'IntersectionObserver' in window) {
 }
 
 const homeDashboard = document.getElementById('activityChartContent');
-// Keep the fixed reminder attached to the document root so dashboard transforms
-// and stacking contexts cannot clip or bury it.
 const draftReminderNode = document.getElementById('draftReminder');
 if (draftReminderNode && draftReminderNode.parentElement !== document.body) {
   document.body.append(draftReminderNode);

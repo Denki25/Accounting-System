@@ -5,20 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Accounting Cycle transforms every transaction into organized accounting insight, from entry to financial report."
+      content="TAMARAW transforms every transaction into organized accounting insight, from entry to financial report."
     />
-    <title>Accounting Cycle</title>
+    
+    <title>TAMARAW</title>
     <link rel="icon" type="image/png" href="assets/logo.png" />
+    <link rel="icon" type="image/png" href="assets/tamaraw-mark.png" />
     <link rel="stylesheet" href="base.css" />
     <link rel="stylesheet" href="shared.css" />
     <link rel="stylesheet" href="home.css" />
+    <link rel="stylesheet" href="site-ui.css" />
   </head>
+
   <body class="dashboard-page">
     <header class="topbar">
       <div class="shell topbar-inner">
-        <a class="brand" href="#top" aria-label="Accounting Cycle home">
-          <img src="assets/logo.png" alt="Accounting Cycle" class="brand-mark" />
-          <span>Accounting Cycle</span>
+        <a class="brand" href="#top" aria-label="TAMARAW home">
+          <span class="brand-lockup"><img src="assets/tamaraw-mark.png" alt="" class="brand-mark" /><img src="assets/tamaraw-wordmark.png" alt="TAMARAW" class="brand-wordmark" /></span>
         </a>
 
         <nav class="main-nav" aria-label="Main navigation">
@@ -59,7 +62,7 @@
                 <path class="cycle-arrow cycle-arrow-flow cycle-arrow-blue" d="M339 236C322 282 288 311 245 330" marker-end="url(#cycleArrowBlue)" />
                 <path class="cycle-arrow cycle-arrow-flow cycle-arrow-gold" d="M156 331C113 314 81 282 61 239" marker-end="url(#cycleArrowGold)" />
               </svg>
-              <div class="art-logo-card"><img src="assets/logo.png" alt="" /><span>Accounting Cycle</span><small>Every number tells a story</small></div>
+              <div class="art-logo-card"><img class="art-logo-mark" src="assets/tamaraw-mark.png" alt="" /><img class="art-logo-wordmark" src="assets/tamaraw-wordmark.png" alt="TAMARAW" /><small>Every number tells a story</small></div>
               <div class="art-stage art-stage-journal"><svg viewBox="0 0 32 32"><path d="M8 4h12l5 5v19H8z"/><path d="M20 4v6h5M12 15h9M12 20h9"/></svg><span>Journal</span></div>
               <div class="art-stage art-stage-ledger"><svg viewBox="0 0 32 32"><path d="M4 7c5-2 9-1 12 2v19c-3-3-7-4-12-2zM28 7c-5-2-9-1-12 2v19c3-3 7-4 12-2z"/></svg><span>Ledger</span></div>
               <div class="art-stage art-stage-reports"><svg viewBox="0 0 32 32"><path d="M6 27V17h5v10zM14 27V7h5v20zM22 27V12h5v15z"/></svg><span>Reports</span></div>
@@ -84,10 +87,12 @@
           </aside>
         </div>
 
-        <section class="workspace-prompt" aria-labelledby="workspacePromptTitle">
-          <div class="workspace-prompt-copy"><span class="workspace-prompt-kicker">OPTIONAL WORKSPACE</span><h2 id="workspacePromptTitle">Set up your workspace when you’re ready</h2><p id="workspacePromptDescription">Add your organization and reporting dates before you start recording transactions.</p></div>
-          <a id="workspacePromptAction" href="transactions.html" class="btn btn-ghost">Set up workspace <span aria-hidden="true">→</span></a>
-        </section>
+        <aside id="draftReminder" class="draft-reminder" aria-live="polite" hidden>
+          <button class="draft-reminder-close" type="button" aria-label="Dismiss draft reminder">×</button>
+          <span class="draft-reminder-icon" aria-hidden="true">▤</span>
+          <div><strong>Unfinished transaction</strong><p>You have a saved draft waiting for you.</p></div>
+          <a href="transactions.html">Continue draft <span aria-hidden="true">→</span></a>
+        </aside>
 
         <section class="dashboard-metrics" aria-label="Journal summary">
           <article class="metric-card metric-debit"><span class="metric-icon">↗</span><div><span class="metric-label">Total debits</span><strong id="homeDebits">₱0.00</strong><small>Across all journal entries</small></div></article>
@@ -131,7 +136,7 @@
 
     <footer class="site-footer professional-footer">
       <div class="shell footer-inner">
-        <a class="footer-brand" href="index.html"><img src="assets/logo.png" alt="Accounting Cycle" class="brand-mark" /><span>Accounting Cycle</span></a>
+        <a class="footer-brand" href="index.html"><img src="assets/tamaraw-wordmark.png" alt="TAMARAW" class="brand-wordmark" /></a>
         <p class="footer-note">A clearer way to follow every transaction.</p>
         <nav class="footer-nav" aria-label="Footer navigation">
           <a href="index.html">Home</a>
@@ -142,7 +147,7 @@
             <span>Facebook</span>
           </a>
         </nav>
-        <small class="footer-copyright">© 2026 Accounting Cycle</small>
+        <small class="footer-copyright">© 2026 TAMARAW</small>
       </div>
     </footer>
 

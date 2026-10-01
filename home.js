@@ -42,12 +42,10 @@ function renderHomeDashboard() {
   setText('homeDifference', formatCurrency(difference));
   setText('homeEntryCount', String(validEntries.length));
   setText('homeBalanceCaption', !validEntries.length ? 'No entries yet' : difference === 0 ? 'Journal is balanced' : 'Journal needs balancing');
-  const promptTitle = document.getElementById('workspacePromptTitle');
-  const promptDescription = document.getElementById('workspacePromptDescription');
-  const promptAction = document.getElementById('workspacePromptAction');
-  if (promptTitle) promptTitle.textContent = workspaceSetup ? `${workspaceSetup.companyName} workspace is ready` : 'Set up your workspace when you’re ready';
-  if (promptDescription) promptDescription.textContent = workspaceSetup ? `Your journal is set up through ${formatDate(workspaceSetup.yearEndDate)}. You can open it whenever you need.` : 'Add your organization and reporting dates before you start recording transactions.';
-  if (promptAction) promptAction.textContent = workspaceSetup ? 'Open workspace →' : 'Set up workspace →';
+  const draftReminder = document.getElementById('draftReminder');
+  if (draftReminder) {
+    try { draftReminder.hidden = !localStorage.getItem(draftStorageKey); } catch { draftReminder.hidden = true; }
+  }
 
   const recentList = document.getElementById('homeRecentTransactions');
   if (recentList) {
@@ -229,4 +227,9 @@ window.addEventListener('storage', (event) => {
     try { workspaceSetup = JSON.parse(event.newValue || 'null'); } catch { workspaceSetup = null; }
     renderHomeDashboard();
   }
+  if (event.key === draftStorageKey) renderHomeDashboard();
+});
+document.querySelector('.draft-reminder-close')?.addEventListener('click', () => {
+  const reminder = document.getElementById('draftReminder');
+  if (reminder) reminder.hidden = true;
 });

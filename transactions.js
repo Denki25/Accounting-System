@@ -4,6 +4,24 @@ const status = document.getElementById('journalStatus');
 const setupOverlay = document.getElementById('workspaceSetupOverlay');
 const setupForm = document.getElementById('workspaceSetupForm');
 const setupError = document.getElementById('setupError');
+const draftFields = ['entryDate', 'debitAccountName', 'debitAmountValue', 'creditAccountName', 'creditAmountValue', 'entryNote'];
+function readTransactionDraft() {
+  try { return JSON.parse(localStorage.getItem(draftStorageKey) || 'null'); } catch { return null; }
+}
+function updateTransactionDraft() {
+  if (!form) return;
+  const draft = Object.fromEntries(draftFields.map((id) => [id, document.getElementById(id)?.value || '']));
+  const hasDetails = draftFields.slice(1).some((id) => draft[id].trim());
+  if (hasDetails) localStorage.setItem(draftStorageKey, JSON.stringify(draft));
+  else localStorage.removeItem(draftStorageKey);
+}
+const savedDraft = readTransactionDraft();
+if (form && savedDraft) draftFields.forEach((id) => {
+  const field = document.getElementById(id);
+  if (field && typeof savedDraft[id] === 'string') field.value = savedDraft[id];
+});
+form?.addEventListener('input', updateTransactionDraft);
+form?.addEventListener('change', updateTransactionDraft);
 function openWorkspaceSetup() {
   if (!setupOverlay || !setupForm) return;
   const settingsButton = document.getElementById('editWorkspaceSetup');
@@ -155,6 +173,7 @@ form?.addEventListener('submit', (event) => {
   entries.push({ transactionId, account: creditAccount, amount: creditAmount, type: 'Credit', note, entryDate });
   const savedDate = entryDate;
   form.reset();
+  localStorage.removeItem(draftStorageKey);
   document.getElementById('entryDate').value = savedDate;
   renderEntries();
   document.getElementById('debitAccountName')?.focus();

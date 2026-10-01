@@ -3,6 +3,7 @@ const currency = new Intl.NumberFormat('en-PH', { style: 'currency', currency: '
 const formatCurrency = (amount) => currency.format(amount);
 const storageKey = 'accounting-cycle-transactions';
 const setupStorageKey = 'accounting-cycle-workspace';
+const draftStorageKey = 'accounting-cycle-transaction-draft';
 const localISODate = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 const today = localISODate();
 let workspaceSetup = null;
@@ -11,7 +12,29 @@ let entries = [];
 try { entries = JSON.parse(localStorage.getItem(storageKey) || '[]'); if (!Array.isArray(entries)) entries = []; } catch { entries = []; }
 
 const topbar = document.querySelector('.topbar');
-window.addEventListener('scroll', () => topbar?.classList.toggle('scrolled', window.scrollY > 12));
+const updateTopbar = () => topbar?.classList.toggle('scrolled', window.scrollY > 12);
+updateTopbar();
+window.addEventListener('scroll', updateTopbar, { passive: true });
+
+const revealTargets = document.querySelectorAll(
+  '.dashboard-grid > section, .dashboard-shell > section, .workspace-heading, .workspace-grid > section, .workspace-main > section, .workspace-main > .back-link'
+);
+if (prefersReducedMotion || !('IntersectionObserver' in window)) {
+  revealTargets.forEach((element) => element.classList.add('is-visible'));
+} else {
+  const revealObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('is-visible');
+      observer.unobserve(entry.target);
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -36px 0px' });
+  revealTargets.forEach((element, index) => {
+    element.classList.add('scroll-reveal');
+    element.style.setProperty('--reveal-delay', `${Math.min(index % 3, 2) * 70}ms`);
+    revealObserver.observe(element);
+  });
+}
 
 function formatDate(value) {
   if (!value) return '\u2014';

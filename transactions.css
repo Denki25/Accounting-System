@@ -956,3 +956,32 @@
     justify-self: end;
   }
 }
+
+/* Use the transparent TAMARAW wordmark at a readable size. */
+.dashboard-page .brand-wordmark,
+.workspace-page .brand-wordmark {
+  display: block;
+  width: clamp(150px, 16vw, 205px);
+  height: auto;
+  max-height: 42px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.professional-footer .footer-brand .brand-wordmark {
+  width: 172px;
+  height: auto;
+  max-height: 36px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+@media (max-width: 760px) {
+  .dashboard-page .brand-wordmark,
+  .workspace-page .brand-wordmark { width: 156px; max-height: 34px; }
+  .professional-footer .footer-brand .brand-wordmark { width: 150px; max-height: 32px; }
+}

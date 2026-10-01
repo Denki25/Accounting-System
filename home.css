@@ -1,17 +1,15 @@
 .dashboard-page {
   min-height: 100vh;
-  background:
-    radial-gradient(
-      ellipse at 12% 12%,
-      rgba(212, 229, 255, 0.56),
-      transparent 38%
-    ),
-    radial-gradient(
-      ellipse at 92% 70%,
-      rgba(255, 225, 160, 0.2),
-      transparent 35%
-    ),
-    #f3f6fb;
+  background: #fff;
+}
+
+/* Keep the decorative artwork behind the opening dashboard only. */
+.dashboard-home {
+  background-color: #fff;
+  background-image: url("assets/homepage-background.png");
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: 100% 805px;
 }
 
 .dashboard-page .topbar {
@@ -1379,56 +1377,30 @@
     animation: none;
   }
 }
-.workspace-prompt {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-top: 16px;
-  padding: 16px 20px;
-  border: 1px solid #e9e3d3;
-  border-radius: 16px;
-  background: linear-gradient(100deg, #fffdf8, #fff);
-  box-shadow: 0 6px 18px rgba(20, 43, 76, 0.035);
-}
-.workspace-prompt-icon {
+.draft-reminder {
+  position: fixed;
+  z-index: 30;
+  right: max(22px, calc((100vw - 1480px) / 2));
+  bottom: 22px;
   display: grid;
-  place-items: center;
-  flex: 0 0 38px;
-  height: 38px;
-  border-radius: 12px;
-  background: #fff4d4;
-  color: #c28b1c;
-  font-size: 1.2rem;
+  grid-template-columns: 42px 1fr;
+  gap: 11px 12px;
+  width: min(310px, calc(100vw - 32px));
+  padding: 18px;
+  border: 1px solid #dbe5f1;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 14px 40px rgba(22, 48, 79, 0.2);
+  animation: draft-reminder-in 220ms ease-out both;
 }
-.workspace-prompt-copy {
-  min-width: 0;
-  flex: 1;
-}
-.workspace-prompt-kicker {
-  color: #aa7b1f;
-  font-size: 0.6rem;
-  font-weight: 800;
-  letter-spacing: 0.13em;
-}
-.workspace-prompt-copy h2 {
-  margin: 2px 0;
-  color: #173655;
-  font-size: 0.92rem;
-  letter-spacing: -0.025em;
-}
-.workspace-prompt-copy p {
-  margin: 0;
-  color: #8490a1;
-  font-size: 0.73rem;
-  line-height: 1.45;
-}
-.workspace-prompt .btn {
-  min-height: 40px;
-  padding: 0.55rem 0.85rem;
-  border-radius: 10px;
-  white-space: nowrap;
-  font-size: 0.76rem;
-}
+.draft-reminder[hidden] { display: none; }
+.draft-reminder-icon { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 12px; background: #edf5ff; color: #2874bd; font-size: 1.2rem; }
+.draft-reminder strong { display: block; padding: 2px 20px 0 0; color: #173655; font-size: 0.9rem; }
+.draft-reminder p { margin: 4px 0 0; color: #718096; font-size: 0.76rem; line-height: 1.45; }
+.draft-reminder > a { grid-column: 2; color: #1767ad; font-size: 0.78rem; font-weight: 750; text-decoration: none; }
+.draft-reminder > a:hover { text-decoration: underline; }
+.draft-reminder-close { position: absolute; top: 9px; right: 10px; border: 0; background: transparent; color: #8190a2; cursor: pointer; font-size: 1.2rem; }
+@keyframes draft-reminder-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 @media (max-width: 760px) {
   .dashboard-page .topbar-inner,
   .workspace-page .topbar-inner {
@@ -1459,18 +1431,6 @@
   .workspace-page .brand-mark {
     width: 42px;
     height: 34px;
-  }
-  .workspace-prompt {
-    align-items: flex-start;
-    flex-wrap: wrap;
-    gap: 11px;
-    padding: 14px;
-  }
-  .workspace-prompt-copy {
-    flex-basis: calc(100% - 55px);
-  }
-  .workspace-prompt .btn {
-    margin-left: 49px;
   }
 }
 @media (max-width: 420px) {
@@ -1722,4 +1682,39 @@
   .art-orbit {
     animation: none;
   }
+}
+
+/* Tamaraw identity in the dashboard brand card. */
+.art-logo-card .art-logo-mark { width: 52px; height: 52px; object-fit: contain; }
+.art-logo-card .art-logo-wordmark { width: min(100%, 180px); height: auto; max-height: 28px; object-fit: contain; }
+@media (max-width: 760px) { .art-logo-card .art-logo-mark { width: 38px; height: 38px; } .art-logo-card .art-logo-wordmark { max-height: 20px; } }
+
+/* Use the transparent TAMARAW wordmark at a readable size. */
+.dashboard-page .brand-wordmark,
+.workspace-page .brand-wordmark {
+  display: block;
+  width: clamp(150px, 16vw, 205px);
+  height: auto;
+  max-height: 42px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.professional-footer .footer-brand .brand-wordmark {
+  width: 172px;
+  height: auto;
+  max-height: 36px;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+@media (max-width: 760px) {
+  .dashboard-page .brand-wordmark,
+  .workspace-page .brand-wordmark { width: 156px; max-height: 34px; }
+  .professional-footer .footer-brand .brand-wordmark { width: 150px; max-height: 32px; }
 }

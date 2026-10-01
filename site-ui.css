@@ -205,6 +205,7 @@
     color: #173655;
   }
   .topbar .brand { order: 0; }
+  .topbar .brand { margin-right: auto; }
   .topbar .nav-toggle span {
     width: 18px;
     height: 2px;
@@ -248,6 +249,8 @@
   .topbar .main-nav a:focus-visible,
   .topbar .main-nav a.is-current { background: #e8f1ff; color: #155daf; }
   .topbar .topbar-inner > .btn { order: 2; }
+  .topbar .nav-toggle { order: 3; }
+  .topbar .main-nav { order: 4; }
 }
 
 @media (max-width: 420px) {

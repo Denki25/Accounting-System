@@ -15,11 +15,7 @@
   <header class="topbar"><div class="shell topbar-inner">
     <a class="brand" href="index.html" aria-label="TAMARAW home"><span class="brand-lockup"><img src="assets/tamaraw-mark.png" alt="" class="brand-mark" /><img src="assets/tamaraw-wordmark.png" alt="TAMARAW" class="brand-wordmark" /></span></a>
     <nav class="main-nav" id="mainNavigation" aria-label="Main navigation">
-      <a href="index.html">Home</a>
-      <a href="index.html#calculator">Calculator</a>
-      <a href="index.html#reports">Reports</a>
-      <a href="index.html#how-it-works">How It Works</a>
-      <a class="is-current" href="transactions.html" aria-current="page">Transactions</a>
+      <a href="index.html">Home</a><a class="is-current" href="transactions.html" aria-current="page">Transactions</a><a href="index.html#calculator">Calculator</a><a href="index.html#reports">Reports</a><a href="index.html#how-it-works">How It Works</a>
     </nav>
     <a href="#transactionForm" class="btn btn-solid">Open workspace</a>
     <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mainNavigation"><span></span><span></span><span></span></button>
@@ -51,32 +47,84 @@
   <main class="workspace-main shell">
     <div class="workspace-heading">
       <div><p class="eyebrow">Accounting workspace</p><h1>Transactions</h1><p id="workspaceCompanyName">Record and review your journal activity.</p></div>
-      <div class="workspace-heading-actions"><div class="balance-pill"><span class="status-label">Journal status</span><span id="balanceLabel">No entries yet</span></div><button id="editWorkspaceSetup" class="text-button" type="button">Workspace settings</button></div>
+      <div class="workspace-heading-actions"><div class="balance-pill"><span class="balance-indicator"></span><span id="balanceLabel">No entries yet</span></div><button id="editWorkspaceSetup" class="text-button" type="button">Workspace settings</button></div>
     </div>
     <div class="workspace-grid">
       <section class="workspace-card entry-card">
-        <div class="card-heading"><div><p class="eyebrow">Journal workspace</p><h2>Enter a transaction</h2></div><span class="card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14m-7-7h14"/></svg></span></div>
+        <div class="card-heading"><div><p class="eyebrow">Journal workspace</p><h2>Enter a transaction</h2></div><span class="card-icon">＋</span></div>
         <form id="transactionForm" class="transaction-form journal-composer">
           <div class="composer-date"><label for="entryDate">Transaction date</label><div class="calendar-control"><input id="entryDate" name="entryDate" type="date" required /><button class="date-picker-button" type="button" data-calendar-for="entryDate" aria-label="Open transaction date calendar"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 2v3m10-3v3M4 9h16M5 4h14a1 1 0 0 1 1 1v14H4V5a1 1 0 0 1 1-1Zm3 9h2m3 0h2m-7 4h2m3 0h2" /></svg></button></div></div>
           <fieldset class="account-details debit-details"><legend>Debit</legend><div class="account-field"><label for="debitAccountName">Account</label><input id="debitAccountName" name="debitAccount" type="text" placeholder="e.g. Cash" autocomplete="off" required /></div><div class="account-field"><label for="debitAmountValue">Amount</label><div class="money-input"><span>₱</span><input id="debitAmountValue" name="debitAmount" type="number" placeholder="0.00" min="0.01" step="0.01" inputmode="decimal" required /></div></div></fieldset>
           <fieldset class="account-details credit-details"><legend>Credit</legend><div class="account-field"><label for="creditAccountName">Account</label><input id="creditAccountName" name="creditAccount" type="text" placeholder="e.g. Owner's Capital" autocomplete="off" required /></div><div class="account-field"><label for="creditAmountValue">Amount</label><div class="money-input"><span>₱</span><input id="creditAmountValue" name="creditAmount" type="number" placeholder="0.00" min="0.01" step="0.01" inputmode="decimal" required /></div></div></fieldset>
           <label class="note-field" for="entryNote">Note <small>(optional)</small><textarea id="entryNote" name="note" rows="2" placeholder="Add a note about this transaction"></textarea></label>
           <p id="journalStatus" class="journal-status" role="status" aria-live="polite">Add an entry to post it to the general journal.</p>
-          <div class="composer-actions"><button class="btn btn-solid add-entry-button" type="submit">Add to journal <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 5v14m-7-7h14"/></svg></span></button><button id="finishJournal" class="finish-journal-button" type="button">Finish &amp; View Ledger</button></div>
+          <div class="composer-actions"><button class="btn btn-solid add-entry-button" type="submit">Add to journal <span aria-hidden="true">＋</span></button><button id="finishJournal" class="finish-journal-button" type="button">Finish &amp; View Ledger</button></div>
           <p class="form-hint">Balanced entries are posted to the general journal immediately.</p>
         </form>
       </section>
       <section class="workspace-card journal-card">
         <div class="card-heading journal-heading"><div><p class="eyebrow">Posted transactions</p><h2>General Journal <span class="entry-count" id="entryCount">0</span></h2></div><button id="clearEntries" class="text-button" type="button">Clear all</button></div>
-        <div class="journal-result journal-table-wrap"><table class="general-journal-table"><thead><tr><th>Date</th><th>Particulars</th><th>Debit</th><th>Credit</th></tr></thead><tbody id="journalRows"></tbody></table><div id="emptyJournal" class="empty-journal"><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 3.75h11.5L20 7v13.25H5a2 2 0 0 1-2-2V5.75a2 2 0 0 1 2-2Z"/><path d="M16 4v4h4M8 12h8m-8 4h8"/></svg></span><strong>Your journal starts here</strong><p>Complete the debit and credit details, then add the entry.</p></div></div>
+        <div class="journal-result journal-table-wrap"><table class="general-journal-table"><thead><tr><th>Date</th><th>Particulars</th><th>Debit</th><th>Credit</th></tr></thead><tbody id="journalRows"></tbody></table><div id="emptyJournal" class="empty-journal"><span>＋</span><strong>Your journal starts here</strong><p>Complete the debit and credit details, then add the entry.</p></div></div>
         <div class="totals-wrap"><div><span>Total debits</span><strong id="debitTotal">₱0.00</strong></div><div><span>Total credits</span><strong id="creditTotal">₱0.00</strong></div><div class="difference-total"><span>Difference</span><strong id="differenceValue">₱0.00</strong></div></div>
         <p id="journalSummaryStatus" class="journal-status journal-summary-status" role="status" aria-live="polite">No entries yet.</p>
       </section>
     </div>
+
     <section id="ledgerSection" class="workspace-card ledger-section" aria-labelledby="ledgerTitle" hidden>
-      <div class="card-heading ledger-heading"><div><p class="eyebrow">Posted account activity</p><h2 id="ledgerTitle">General Ledger <span id="ledgerAccountCount" class="entry-count">0</span></h2><p class="ledger-intro">Journal entries grouped by account, with debit and credit sides.</p></div><div class="ledger-controls"><label class="ledger-search" for="ledgerSearch"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="6.8"></circle><path d="m16 16 5 5"></path></svg><input id="ledgerSearch" type="search" placeholder="Search accounts…" autocomplete="off" /></label><label class="ledger-filter-control" for="ledgerAccountFilter"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 5h16l-6.2 7.1v5.5l-3.6 1.8v-7.3L4 5Z"></path></svg><select id="ledgerAccountFilter"><option value="">All Accounts</option></select></label><button id="backToJournal" class="text-button" type="button">← Back to Journal</button></div></div>
+      
+      <div class="card-heading ledger-heading">
+        <div>
+          <p class="eyebrow">Posted account activity</p>
+          <h2 id="ledgerTitle">
+            General Ledger <span id="ledgerAccountCount" class="entry-count">0</span>
+          </h2>
+          <p class="ledger-intro">Journal entries grouped by account, with debit and credit sides.</p>
+        </div>
+
+        <div class="ledger-controls">
+          <label class="ledger-search" for="ledgerSearch">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <circle cx="10.8" cy="10.8" r="6.8"></circle>
+              <path d="m16 16 5 5"></path>
+            </svg>
+            <input id="ledgerSearch" type="search" placeholder="Search accounts…" autocomplete="off" />
+          </label>
+          <label class="ledger-filter-control" for="ledgerAccountFilter">
+            <svg aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M4 5h16l-6.2 7.1v5.5l-3.6 1.8v-7.3L4 5Z"></path>
+            </svg>
+            <select id="ledgerAccountFilter">
+              <option value="">All Accounts</option>
+            </select>
+          </label>
+          <button id="backToJournal" class="text-button" type="button">← Back to Journal</button>
+        </div>
+
+      </div>
+
       <div id="ledgerAccounts" class="ledger-account-grid"></div>
     </section>
+
+    <section id="TrialBalanceSection" class="workspace-card trialbalance-section" aria-labelledby="trialBalanceTitle">
+      <div class="card-heading tb-heading">
+        <div>
+          <p class="eyebrow">Posted account balances</p>
+          <h2 id="trialBalanceTitle">Unadjusted Trial Balance <span id="tbAccountCount" class="entry-count">0</span></h2>
+          <p id="tbSubtitle" class="ledger-intro">Net balance of every account in the general ledger, before adjustments.</p>
+        </div>
+      </div>
+
+      <div id="tbTableWrap" class="tb-wrap" hidden>
+        <table class="tb-table">
+          <thead><tr><th>Account</th><th>Debit</th><th>Credit</th></tr></thead>
+          <tbody id="tbRows"></tbody>
+          <tfoot><tr><th>Total</th><th id="tbDebitTotal">₱0.00</th><th id="tbCreditTotal">₱0.00</th></tr></tfoot>
+        </table>
+      </div>
+      <div id="tbEmpty" class="empty-journal"><span>＋</span><strong>No balances yet</strong><p>Post a journal entry and the trial balance will fill in automatically.</p></div>
+      <p id="tbStatus" class="journal-status journal-summary-status" role="status" aria-live="polite">No entries yet.</p>
+    </section>
+
     <a class="back-link" href="index.html">← Back to accounting overview</a>
   </main>
   <footer class="site-footer professional-footer">

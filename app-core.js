@@ -1,15 +1,24 @@
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const currency = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 2 });
 const formatCurrency = (amount) => currency.format(amount);
-const storageKey = 'accounting-cycle-transactions';
 const setupStorageKey = 'accounting-cycle-workspace';
-const draftStorageKey = 'accounting-cycle-transaction-draft';
-const localISODate = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-const today = localISODate();
+const legacyStorageKey = 'accounting-cycle-transactions';
 let workspaceSetup = null;
 try { workspaceSetup = JSON.parse(localStorage.getItem(setupStorageKey) || 'null'); } catch { workspaceSetup = null; }
+const transactionStorageKeyForCompany = (companyName) => `${legacyStorageKey}:${encodeURIComponent(String(companyName || '').trim().toLocaleLowerCase())}`;
+let storageKey = workspaceSetup?.companyName ? transactionStorageKeyForCompany(workspaceSetup.companyName) : legacyStorageKey;
+const draftStorageKey = 'accounting-cycle-transaction-draft';
+const journalArchiveKey = 'accounting-cycle-journals';
+const localISODate = (date = new Date()) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+const today = localISODate();
 let entries = [];
-try { entries = JSON.parse(localStorage.getItem(storageKey) || '[]'); if (!Array.isArray(entries)) entries = []; } catch { entries = []; }
+try {
+  const saved = localStorage.getItem(storageKey);
+  const legacy = workspaceSetup?.companyName && saved === null ? localStorage.getItem(legacyStorageKey) : null;
+  entries = JSON.parse(saved ?? legacy ?? '[]');
+  if (!Array.isArray(entries)) entries = [];
+  if (legacy !== null && saved === null) localStorage.setItem(storageKey, JSON.stringify(entries));
+} catch { entries = []; }
 
 const topbar = document.querySelector('.topbar');
 const updateTopbar = () => topbar?.classList.toggle('scrolled', window.scrollY > 12);

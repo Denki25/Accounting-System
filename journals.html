@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Browse and reopen saved accounting journals." />
+  <title>Saved Journals · TAMARAW</title>
+  <link rel="icon" type="image/png" href="assets/tamaraw-mark.png" />
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="shared.css" />
+  <link rel="stylesheet" href="site-ui.css" />
+  <link rel="stylesheet" href="journals.css" />
+</head>
+<body class="workspace-page">
+  <header class="topbar"><div class="shell topbar-inner">
+    <a class="brand" href="index.html" aria-label="TAMARAW home"><span class="brand-lockup"><img src="assets/tamaraw-mark.png" alt="" class="brand-mark" /><img src="assets/tamaraw-wordmark.png" alt="TAMARAW" class="brand-wordmark" /></span></a>
+    <nav class="main-nav" id="mainNavigation" aria-label="Main navigation"><a href="index.html">Home</a><a href="transactions.html">Transactions</a><a class="is-current" href="journals.html" aria-current="page">View Journals</a></nav>
+    <a href="transactions.html" class="btn btn-solid">New transaction</a>
+    <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mainNavigation"><span></span><span></span><span></span></button>
+  </div></header>
+  <main class="shell journals-page">
+    <div class="workspace-heading"><div><p class="eyebrow">Accounting workspace</p><h1>Saved Journals</h1><p>Open a saved transaction to review its journal entries, general ledger, and unadjusted trial balance.</p></div><a href="transactions.html" class="btn btn-solid">＋ Add transaction</a></div>
+    <p id="journalLibraryStatus" class="journal-library-status" role="status" aria-live="polite"></p>
+    <section id="savedJournalList" class="saved-journal-grid" aria-label="Saved journals"></section>
+    <a class="back-link" href="transactions.html">← Back to transactions</a>
+  </main>
+  <footer class="site-footer professional-footer"><div class="shell footer-inner"><a class="footer-brand" href="index.html"><img src="assets/tamaraw-wordmark.png" alt="TAMARAW" class="brand-wordmark" /></a><p class="footer-note">A clearer way to follow every transaction.</p><small class="footer-copyright">© 2026 TAMARAW</small></div></footer>
+  <script src="app-core.js"></script><script src="journals.js"></script><script src="nav-menu.js"></script>
+</body>
+</html>

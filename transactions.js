@@ -5,6 +5,62 @@ const setupOverlay = document.getElementById('workspaceSetupOverlay');
 const setupForm = document.getElementById('workspaceSetupForm');
 const setupError = document.getElementById('setupError');
 const draftFields = ['entryDate', 'debitAccountName', 'debitAmountValue', 'creditAccountName', 'creditAmountValue', 'entryNote'];
+const trialBalanceCategory = (name) => {
+  const value = name.toLocaleLowerCase();
+  if (/draw|withdraw/.test(value)) return 3;
+  if (/revenue|income|sales|service|interest earned|gain/.test(value)) return 4;
+  if (/expense|supplies used|depreciation|loss|rent|salary|wage|utilities|insurance|advertis|interest expense|bad debt/.test(value)) return 5;
+  if (/payable|loan|note payable|mortgage|unearned|liabilit/.test(value)) return 1;
+  if (/capital|equity|retained earning|owner/.test(value)) return 2;
+  return 0;
+};
+const trialBalanceCategoryNames = ['ASSETS', 'LIABILITIES', 'EQUITY / CAPITAL', 'DRAWINGS', 'INCOME / REVENUE', 'EXPENSES'];
+const savedJournalId = new URLSearchParams(location.search).get('journal');
+let viewingSavedJournal = false;
+const finishResetKey = 'accounting-cycle-reset-workspace-after-save';
+if (!savedJournalId && localStorage.getItem(finishResetKey) === 'true') {
+  localStorage.removeItem(finishResetKey);
+  localStorage.removeItem(setupStorageKey);
+  localStorage.removeItem(storageKey);
+  localStorage.removeItem(legacyStorageKey);
+  localStorage.removeItem(draftStorageKey);
+  workspaceSetup = null;
+  storageKey = legacyStorageKey;
+  entries = [];
+}
+function readJournalArchive() {
+  try {
+    const value = JSON.parse(localStorage.getItem(journalArchiveKey) || '[]');
+    if (!Array.isArray(value)) return [];
+    const companies = new Map();
+    value.forEach((journal) => {
+      const companyName = journal.companyName || 'Company name';
+      const companyId = journal.companyId || companyName.trim().toLocaleLowerCase();
+      const record = companies.get(companyId) || { ...journal, id: `company-${encodeURIComponent(companyId)}`, companyId, companyName, entries: [] };
+      const byTransaction = new Map(record.entries.map((entry, index) => [entry.transactionId || `legacy-${index}`, entry]));
+      (journal.entries || []).forEach((entry, index) => byTransaction.set(entry.transactionId || `${journal.id}-legacy-${index}`, entry));
+      record.entries = [...byTransaction.values()];
+      if ((journal.date || '') >= (record.date || '')) Object.assign(record, journal, { id: `company-${encodeURIComponent(companyId)}`, companyId, entries: record.entries });
+      companies.set(companyId, record);
+    });
+    const normalized = [...companies.values()];
+    if (JSON.stringify(normalized) !== JSON.stringify(value)) localStorage.setItem(journalArchiveKey, JSON.stringify(normalized));
+    return normalized;
+  } catch { return []; }
+}
+function archiveExistingEntries() {
+  const archive = readJournalArchive();
+  if (!entries.length) return;
+  const companyName = workspaceSetup?.companyName || 'Company name';
+  const companyId = companyName.trim().toLocaleLowerCase();
+  const debits = entries.filter((entry) => entry.type === 'Debit');
+  const lastDebit = debits.at(-1);
+  if (!lastDebit) return;
+  const existing = archive.find((journal) => journal.companyId === companyId || (!journal.companyId && journal.companyName?.trim().toLocaleLowerCase() === companyId));
+  const record = { id: existing?.id || `company-${encodeURIComponent(companyId)}`, companyId, companyName, workspace: workspaceSetup || null, date: getEntryDate(lastDebit), note: lastDebit.note || '', debitAccount: lastDebit.account, creditAccount: entries.filter((entry) => entry.type === 'Credit').at(-1)?.account || '', amount: Number(lastDebit.amount), entries: entries.slice() };
+  if (existing) Object.assign(existing, record); else archive.unshift(record);
+  localStorage.setItem(journalArchiveKey, JSON.stringify(archive));
+}
 function readTransactionDraft() {
   try { return JSON.parse(localStorage.getItem(draftStorageKey) || 'null'); } catch { return null; }
 }
@@ -41,7 +97,6 @@ function requireWorkspace() {
   openWorkspaceSetup();
   return false;
 }
-if (setupOverlay && !workspaceSetup) openWorkspaceSetup();
 if (setupOverlay && workspaceSetup) setupOverlay.hidden = true;
 setupForm?.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -49,6 +104,14 @@ setupForm?.addEventListener('submit', (event) => {
   const asOfDate = setupForm.elements.asOfDate.value;
   const yearEndDate = setupForm.elements.yearEndDate.value;
   if (!companyName || !asOfDate || !yearEndDate) return;
+  const previousCompanyName = workspaceSetup?.companyName || '';
+  const previousStorageKey = storageKey;
+  const nextStorageKey = transactionStorageKeyForCompany(companyName);
+  if (previousCompanyName.toLocaleLowerCase() !== companyName.toLocaleLowerCase()) {
+    if (!previousCompanyName && localStorage.getItem(nextStorageKey) === null) localStorage.setItem(nextStorageKey, JSON.stringify(entries));
+    storageKey = nextStorageKey;
+    try { entries = JSON.parse(localStorage.getItem(storageKey) || '[]'); if (!Array.isArray(entries)) entries = []; } catch { entries = []; }
+  }
   workspaceSetup = { companyName, asOfDate, yearEndDate };
   localStorage.setItem(setupStorageKey, JSON.stringify(workspaceSetup));
   const settingsButton = document.getElementById('editWorkspaceSetup');
@@ -62,18 +125,12 @@ setupForm?.addEventListener('submit', (event) => {
   const entryDate = document.getElementById('entryDate');
   if (entryDate && !entryDate.value) entryDate.value = asOfDate;
   renderEntries();
+  renderTrialBalance();
+  if (previousStorageKey !== storageKey) localStorage.setItem(storageKey, JSON.stringify(entries));
 });
 document.getElementById('editWorkspaceSetup')?.addEventListener('click', openWorkspaceSetup);
 document.getElementById('cancelSetup')?.addEventListener('click', () => {
-  if (!setupOverlay) return;
-  if (!workspaceSetup) {
-    window.location.href = 'index.html';
-    return;
-  }
-  setupOverlay.hidden = true;
-  document.querySelector('.workspace-main')?.removeAttribute('inert');
-  document.querySelector('.workspace-page > .topbar')?.removeAttribute('inert');
-  document.querySelector('.workspace-page > .professional-footer')?.removeAttribute('inert');
+  location.href = 'index.html';
 });
 document.querySelectorAll('[data-calendar-for]').forEach((button) => button.addEventListener('click', () => {
   const input = document.getElementById(button.dataset.calendarFor);
@@ -94,6 +151,13 @@ function renderEntries() {
     groups.set(key, group);
   });
   const journalGroups = [...groups.values()];
+  const journalCompanyName = document.getElementById('journalCompanyName');
+  if (journalCompanyName) journalCompanyName.textContent = workspaceSetup?.companyName || 'Company name';
+  const journalDate = document.getElementById('journalLastTransactionDate');
+  if (journalDate) {
+    const lastTransactionDate = journalGroups.map((group) => group.entryDate).filter(Boolean).sort().at(-1);
+    journalDate.textContent = lastTransactionDate ? ` ${formatDate(lastTransactionDate)}` : 'No transactions yet';
+  }
   rows.innerHTML = journalGroups.map((group) => {
     const hasDebit = Boolean(group.debit);
     const hasCredit = Boolean(group.credit);
@@ -107,22 +171,54 @@ function renderEntries() {
   }).join('');
   const debit = entries.filter((entry) => entry.type === 'Debit').reduce((sum, entry) => sum + Number(entry.amount), 0);
   const credit = entries.filter((entry) => entry.type === 'Credit').reduce((sum, entry) => sum + Number(entry.amount), 0);
-  document.getElementById('debitTotal')?.replaceChildren(document.createTextNode(fmt(debit)));
-  document.getElementById('creditTotal')?.replaceChildren(document.createTextNode(fmt(credit)));
-  document.getElementById('differenceValue')?.replaceChildren(document.createTextNode(fmt(Math.abs(debit - credit))));
   const balanced = journalGroups.length > 0 && Math.round(debit * 100) === Math.round(credit * 100);
   if (status) { status.textContent = !journalGroups.length ? 'Add an entry to post it to the general journal.' : balanced ? '✓ Journal entries are posted and balanced.' : 'Journal entries need balancing.'; status.className = `journal-status${balanced ? ' success' : journalGroups.length ? ' error' : ''}`; }
-  const summaryStatus = document.getElementById('balanceLabel');
-  if (summaryStatus) summaryStatus.textContent = !journalGroups.length ? 'No entries yet' : balanced ? 'Journal is balanced' : 'Journal needs balancing';
   const journalSummaryStatus = document.getElementById('journalSummaryStatus');
   if (journalSummaryStatus) journalSummaryStatus.textContent = !journalGroups.length ? 'No entries yet.' : balanced ? 'All journal entries are balanced.' : 'Debits and credits differ.';
   document.getElementById('entryCount')?.replaceChildren(document.createTextNode(String(journalGroups.length)));
   document.getElementById('emptyJournal')?.classList.toggle('is-hidden', journalGroups.length > 0);
-  localStorage.setItem(storageKey, JSON.stringify(entries));
+  if (!viewingSavedJournal) localStorage.setItem(storageKey, JSON.stringify(entries));
+  renderTrialBalance();
   if (!journalGroups.length) {
     const ledgerSection = document.getElementById('ledgerSection');
     if (ledgerSection) ledgerSection.hidden = true;
   } else if (document.getElementById('ledgerSection')?.hidden === false) renderLedger();
+}
+function renderTrialBalance() {
+  const body = document.getElementById('tbRows');
+  if (!body) return;
+  const accounts = new Map();
+  entries.forEach((entry) => {
+    const name = String(entry.account || 'Unnamed account').trim() || 'Unnamed account';
+    const account = accounts.get(name) || { debit: 0, credit: 0 };
+    account[entry.type === 'Debit' ? 'debit' : 'credit'] += Number(entry.amount) || 0;
+    accounts.set(name, account);
+  });
+  const groups = trialBalanceCategoryNames.map(() => []);
+  for (const [name, account] of accounts) {
+    const net = Math.round((account.debit - account.credit) * 100) / 100;
+    if (Math.abs(net) < 0.005) continue;
+    groups[trialBalanceCategory(name)].push({ name, debit: net > 0 ? net : 0, credit: net < 0 ? -net : 0 });
+  }
+  groups.forEach((group) => group.sort((a, b) => a.name.localeCompare(b.name)));
+  const fmt = (amount) => amount ? formatCurrency(amount) : '';
+  let debitTotal = 0, creditTotal = 0;
+  body.innerHTML = groups.map((group) => {
+    if (!group.length) return '';
+    const accountRows = group.map((account) => {
+      debitTotal += account.debit; creditTotal += account.credit;
+      return `<tr><td>${escapeHTML(account.name)}</td><td class="tb-debit">${fmt(account.debit)}</td><td class="tb-credit">${fmt(account.credit)}</td></tr>`;
+    }).join('');
+    return accountRows;
+  }).join('');
+  const hasAccounts = groups.some((group) => group.length);
+  document.getElementById('tbTableWrap').hidden = !hasAccounts;
+  document.getElementById('tbAccountCount').textContent = String(accounts.size);
+  document.getElementById('tbDebitTotal').textContent = formatCurrency(debitTotal);
+  document.getElementById('tbCreditTotal').textContent = formatCurrency(creditTotal);
+  const company = workspaceSetup?.companyName || 'Company name';
+  document.getElementById('tbCompanyName').textContent = company;
+  document.getElementById('tbAccountingDate').textContent = workspaceSetup?.asOfDate ? `As of ${formatDate(workspaceSetup.asOfDate)}` : `As of ${formatDate(today)}`;
 }
 function renderLedger() {
   const ledgerAccounts = document.getElementById('ledgerAccounts');
@@ -176,7 +272,6 @@ form?.addEventListener('submit', (event) => {
   localStorage.removeItem(draftStorageKey);
   document.getElementById('entryDate').value = savedDate;
   renderEntries();
-  document.getElementById('debitAccountName')?.focus();
 });
 document.getElementById('finishJournal')?.addEventListener('click', () => {
   if (!requireWorkspace()) return;
@@ -184,12 +279,17 @@ document.getElementById('finishJournal')?.addEventListener('click', () => {
     if (status) { status.textContent = 'Add at least one journal entry before viewing the ledger.'; status.className = 'journal-status error'; }
     return;
   }
-  renderLedger();
-  const ledgerSection = document.getElementById('ledgerSection');
-  if (ledgerSection) {
-    ledgerSection.hidden = false;
-    ledgerSection.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
-  }
+  archiveExistingEntries();
+  const companyId = (workspaceSetup?.companyName || '').trim().toLocaleLowerCase();
+  const saved = readJournalArchive().find((journal) => journal.companyId === companyId);
+  if (!saved) return;
+  entries = [];
+  localStorage.removeItem(setupStorageKey);
+  localStorage.removeItem(storageKey);
+  localStorage.removeItem(legacyStorageKey);
+  localStorage.removeItem(draftStorageKey);
+  localStorage.setItem(finishResetKey, 'true');
+  location.href = `transactions.html?journal=${encodeURIComponent(saved.id)}`;
 });
 document.getElementById('backToJournal')?.addEventListener('click', () => {
   document.querySelector('.journal-card')?.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
@@ -203,7 +303,13 @@ document.getElementById('clearEntries')?.addEventListener('click', () => {
 window.addEventListener('storage', (event) => { if (event.key === storageKey) { try { entries = JSON.parse(event.newValue || '[]'); } catch { entries = []; } renderEntries(); } });
 window.addEventListener('storage', (event) => {
   if (event.key === setupStorageKey) {
+    const previousKey = storageKey;
     try { workspaceSetup = JSON.parse(event.newValue || 'null'); } catch { workspaceSetup = null; }
+    storageKey = workspaceSetup?.companyName ? transactionStorageKeyForCompany(workspaceSetup.companyName) : legacyStorageKey;
+    if (storageKey !== previousKey) {
+      try { entries = JSON.parse(localStorage.getItem(storageKey) || '[]'); if (!Array.isArray(entries)) entries = []; } catch { entries = []; }
+      renderEntries();
+    }
     if (workspaceSetup && setupOverlay) {
       setupOverlay.hidden = true;
       document.querySelector('.workspace-main')?.removeAttribute('inert');
@@ -212,6 +318,7 @@ window.addEventListener('storage', (event) => {
     }
     const companyNameDisplay = document.getElementById('workspaceCompanyName');
     if (companyNameDisplay && workspaceSetup) companyNameDisplay.textContent = `${workspaceSetup.companyName} · Journal period through ${formatDate(workspaceSetup.yearEndDate)}`;
+    renderTrialBalance();
   }
 });
 if (workspaceSetup) {
@@ -224,4 +331,39 @@ else {
   const entryDate = document.getElementById('entryDate');
   if (entryDate && !entryDate.value) entryDate.value = today;
 }
+if (savedJournalId) {
+  const saved = readJournalArchive().find((journal) => journal.id === savedJournalId);
+  if (saved) {
+    viewingSavedJournal = true;
+    entries = saved.entries || [];
+    workspaceSetup = saved.workspace || { companyName: saved.companyName, asOfDate: saved.date, yearEndDate: saved.date };
+    document.querySelector('.workspace-heading h1').textContent = 'Saved Journal';
+    document.querySelector('.workspace-heading > div > p:not(.eyebrow)').textContent = saved.companyName;
+    document.querySelector('.entry-card').hidden = true;
+    document.getElementById('savedJournalViews').hidden = false;
+    document.querySelector('.journal-card #clearEntries')?.remove();
+    document.querySelector('.workspace-heading-actions')?.insertAdjacentHTML('beforeend', '<a class="text-button" href="journals.html">← All Journals</a>');
+    const ledgerSection = document.getElementById('ledgerSection');
+    if (ledgerSection) ledgerSection.hidden = false;
+    document.getElementById('TrialBalanceSection')?.removeAttribute('hidden');
+    document.getElementById('ledgerSearch')?.setAttribute('disabled', '');
+    document.getElementById('ledgerAccountFilter')?.setAttribute('disabled', '');
+  }
+}
+else if (!workspaceSetup) {
+  openWorkspaceSetup();
+}
+document.getElementById('savedJournalViews')?.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-report-view]');
+  if (!button || !viewingSavedJournal) return;
+  const view = button.dataset.reportView;
+  document.querySelector('.journal-card').hidden = view !== 'all' && view !== 'journal';
+  document.getElementById('ledgerSection').hidden = view !== 'all' && view !== 'ledger';
+  document.getElementById('TrialBalanceSection').hidden = view !== 'all' && view !== 'trial-balance';
+  document.querySelectorAll('#savedJournalViews [data-report-view]').forEach((option) => {
+    option.setAttribute('aria-pressed', String(option === button));
+  });
+});
 renderEntries();
+if (savedJournalId && viewingSavedJournal) renderLedger();
+renderTrialBalance();

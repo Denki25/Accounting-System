@@ -526,7 +526,6 @@
 .workspace-page .journal-table-wrap {
   overflow-x: auto;
   border: 1px solid #e8edf4;
-  border-top: 4px solid var(--blue);
   border-radius: 13px;
   background: #fff;
 }
@@ -1448,25 +1447,6 @@ body:not(.workspace-page) .ghost-btn:focus-visible {
   font-size: 0.9rem;
   line-height: 1.65;
 }
-.setup-aside-note {
-  display: flex;
-  align-items: flex-start;
-  gap: 11px;
-  margin-top: 36px;
-  padding-top: 18px;
-  border-top: 1px solid rgba(255, 255, 255, 0.16);
-}
-.setup-aside-note span {
-  color: #ffd15a;
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-}
-.setup-aside-note p {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.75rem;
-}
 .setup-form {
   align-content: center;
   gap: 9px;
@@ -1568,9 +1548,6 @@ body:not(.workspace-page) .ghost-btn:focus-visible {
   .setup-aside h1 {
     margin: 15px 0 8px;
     font-size: 1.75rem;
-  }
-  .setup-aside-note {
-    display: none;
   }
   .setup-form {
     padding: 23px 24px 26px;

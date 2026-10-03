@@ -15,12 +15,11 @@
   <header class="topbar"><div class="shell topbar-inner">
     <a class="brand" href="index.html" aria-label="TAMARAW home"><span class="brand-lockup"><img src="assets/tamaraw-mark.png" alt="" class="brand-mark" /><img src="assets/tamaraw-wordmark.png" alt="TAMARAW" class="brand-wordmark" /></span></a>
     <nav class="main-nav" id="mainNavigation" aria-label="Main navigation">
-      <a href="index.html">Home</a><a class="is-current" href="transactions.html" aria-current="page">Transactions</a><a href="index.html#calculator">Calculator</a><a href="index.html#reports">Reports</a><a href="index.html#how-it-works">How It Works</a>
-    </nav>
-    <a href="#transactionForm" class="btn btn-solid">Open workspace</a>
+      <a href="index.html">Home</a><a class="is-current" href="transactions.html" aria-current="page">Transactions</a><a href="journals.html">View Journals</a>
+    </nav>  
+    <a href="transactions.html" class="btn btn-solid">New transaction</a>
     <button class="nav-toggle" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mainNavigation"><span></span><span></span><span></span></button>
   </div></header>
-
   <div id="workspaceSetupOverlay" class="setup-overlay" hidden>
     <section class="setup-dialog" role="dialog" aria-modal="true" aria-labelledby="setupTitle" aria-describedby="setupDescription">
       <div class="setup-layout">
@@ -28,7 +27,6 @@
           <span class="setup-tag">OPTIONAL WORKSPACE SETUP</span>
           <h1 id="setupTitle">Make this journal yours.</h1>
           <p id="setupDescription">Add your organization and reporting dates to personalize this workspace. You can skip this and record transactions now.</p>
-          <div class="setup-aside-note"><span>01</span><p>Your journal settings stay saved on this device.</p></div>
         </div>
         <form id="workspaceSetupForm" class="setup-form">
           <div class="setup-form-heading"><span>Workspace details</span><p>These details help organize your journal period.</p></div>
@@ -39,7 +37,7 @@
             <div class="setup-date-field"><label for="workspaceYearEnd">Year ended date</label><div class="calendar-control"><input id="workspaceYearEnd" name="yearEndDate" type="date" required /><button class="date-picker-button" type="button" data-calendar-for="workspaceYearEnd" aria-label="Open year ended date calendar"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 2v3m10-3v3M4 9h16M5 4h14a1 1 0 0 1 1 1v14H4V5a1 1 0 0 1 1-1Zm3 9h2m3 0h2m-7 4h2m3 0h2" /></svg></button></div></div>
           </div>
           <p id="setupError" class="setup-error" role="alert"></p>
-          <div class="setup-actions"><button id="cancelSetup" class="setup-cancel" type="button">Cancel</button><button class="btn btn-solid setup-submit" type="submit">Confirm workspace &amp; start <span aria-hidden="true">→</span></button></div>
+          <div class="setup-actions"><button id="cancelSetup" class="setup-cancel" type="button">Cancel</button><button class="btn btn-solid setup-submit" type="submit">Confirm workspace &amp; start</button></div>
         </form>
       </div>
     </section>
@@ -47,8 +45,14 @@
   <main class="workspace-main shell">
     <div class="workspace-heading">
       <div><p class="eyebrow">Accounting workspace</p><h1>Transactions</h1><p id="workspaceCompanyName">Record and review your journal activity.</p></div>
-      <div class="workspace-heading-actions"><div class="balance-pill"><span class="balance-indicator"></span><span id="balanceLabel">No entries yet</span></div><button id="editWorkspaceSetup" class="text-button" type="button">Workspace settings</button></div>
+      <div class="workspace-heading-actions"><button id="editWorkspaceSetup" class="text-button" type="button">Workspace settings</button></div>
     </div>
+    <nav id="savedJournalViews" class="saved-journal-views" aria-label="Saved journal sections" hidden>
+      <button type="button" data-report-view="all" aria-pressed="true">All</button>
+      <button type="button" data-report-view="journal" aria-pressed="false">General Journal</button>
+      <button type="button" data-report-view="ledger" aria-pressed="false">General Ledger</button>
+      <button type="button" data-report-view="trial-balance" aria-pressed="false">Unadjusted Trial Balance</button>
+    </nav>
     <div class="workspace-grid">
       <section class="workspace-card entry-card">
         <div class="card-heading"><div><p class="eyebrow">Journal workspace</p><h2>Enter a transaction</h2></div><span class="card-icon">＋</span></div>
@@ -64,8 +68,8 @@
       </section>
       <section class="workspace-card journal-card">
         <div class="card-heading journal-heading"><div><p class="eyebrow">Posted transactions</p><h2>General Journal <span class="entry-count" id="entryCount">0</span></h2></div><button id="clearEntries" class="text-button" type="button">Clear all</button></div>
+        <div class="journal-report-heading" aria-label="Journal report heading"><strong id="journalCompanyName">Company name</strong><strong>Journal Entries</strong><span id="journalLastTransactionDate">No transactions yet</span></div>
         <div class="journal-result journal-table-wrap"><table class="general-journal-table"><thead><tr><th>Date</th><th>Particulars</th><th>Debit</th><th>Credit</th></tr></thead><tbody id="journalRows"></tbody></table><div id="emptyJournal" class="empty-journal"><span>＋</span><strong>Your journal starts here</strong><p>Complete the debit and credit details, then add the entry.</p></div></div>
-        <div class="totals-wrap"><div><span>Total debits</span><strong id="debitTotal">₱0.00</strong></div><div><span>Total credits</span><strong id="creditTotal">₱0.00</strong></div><div class="difference-total"><span>Difference</span><strong id="differenceValue">₱0.00</strong></div></div>
         <p id="journalSummaryStatus" class="journal-status journal-summary-status" role="status" aria-live="polite">No entries yet.</p>
       </section>
     </div>
@@ -105,7 +109,7 @@
       <div id="ledgerAccounts" class="ledger-account-grid"></div>
     </section>
 
-    <section id="TrialBalanceSection" class="workspace-card trialbalance-section" aria-labelledby="trialBalanceTitle">
+    <section id="TrialBalanceSection" class="workspace-card trialbalance-section" aria-labelledby="trialBalanceTitle" hidden>
       <div class="card-heading tb-heading">
         <div>
           <p class="eyebrow">Posted account balances</p>
@@ -116,13 +120,12 @@
 
       <div id="tbTableWrap" class="tb-wrap" hidden>
         <table class="tb-table">
-          <thead><tr><th>Account</th><th>Debit</th><th>Credit</th></tr></thead>
+          <caption class="tb-caption"><strong id="tbCompanyName">Company name</strong><strong>Unadjusted Trial Balance</strong><span id="tbAccountingDate"></span></caption>
+          <thead><tr><th>Account Titles</th><th>Debit</th><th>Credit</th></tr></thead>
           <tbody id="tbRows"></tbody>
           <tfoot><tr><th>Total</th><th id="tbDebitTotal">₱0.00</th><th id="tbCreditTotal">₱0.00</th></tr></tfoot>
         </table>
       </div>
-      <div id="tbEmpty" class="empty-journal"><span>＋</span><strong>No balances yet</strong><p>Post a journal entry and the trial balance will fill in automatically.</p></div>
-      <p id="tbStatus" class="journal-status journal-summary-status" role="status" aria-live="polite">No entries yet.</p>
     </section>
 
     <a class="back-link" href="index.html">← Back to accounting overview</a>
@@ -131,12 +134,12 @@
     <div class="shell footer-inner">
       <a class="footer-brand" href="index.html"><img src="assets/tamaraw-wordmark.png" alt="TAMARAW" class="brand-wordmark" /></a>
       <p class="footer-note">A clearer way to follow every transaction.</p>
-      <nav class="footer-nav" aria-label="Footer navigation"><a href="index.html">Home</a><a href="index.html#how-it-works">How it works</a><a href="index.html#calculator">Calculator</a><a href="index.html#reports">Reports</a><a href="transactions.html">Transactions</a><a class="facebook-link" href="https://www.facebook.com/denricc" target="_blank" rel="noopener noreferrer" aria-label="Visit Denric's Facebook profile"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M13.5 21v-8.2h2.8l.4-3.2h-3.2V7.5c0-.9.3-1.5 1.6-1.5h1.7V3.1c-.3 0-1.4-.1-2.6-.1-2.6 0-4.4 1.6-4.4 4.6v2h-2.9v3.2h2.9V21h3.7Z"/></svg><span>Facebook</span></a></nav>
+      <nav class="footer-nav" aria-label="Footer navigation"><a href="index.html">Home</a><a href="transactions.html">Transactions</a><a class="facebook-link" href="https://www.facebook.com/denricc" target="_blank" rel="noopener noreferrer" aria-label="Visit Denric's Facebook profile"><svg aria-hidden="true" viewBox="0 0 24 24"><path d="M13.5 21v-8.2h2.8l.4-3.2h-3.2V7.5c0-.9.3-1.5 1.6-1.5h1.7V3.1c-.3 0-1.4-.1-2.6-.1-2.6 0-4.4 1.6-4.4 4.6v2h-2.9v3.2h2.9V21h3.7Z"/></svg><span>Facebook</span></a></nav>
       <small class="footer-copyright">© 2026 TAMARAW</small>
     </div>
   </footer>
   <script src="app-core.js"></script>
-  <script src="transactions.js"></script>
+  <script src="transactions.js?v=20261004-reset"></script>
   <script src="nav-menu.js"></script>
 </body>
 </html>

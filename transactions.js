@@ -6,28 +6,25 @@ const setupForm = document.getElementById('workspaceSetupForm');
 const setupError = document.getElementById('setupError');
 const draftFields = ['entryDate', 'debitAccountName', 'debitAmountValue', 'creditAccountName', 'creditAmountValue', 'entryNote'];
 const trialBalanceCategory = (name) => {
-  const value = name.toLocaleLowerCase();
+  const value = name.toLocaleLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  if (/accumulated depreciation|allowance for doubtful|contra asset/.test(value)) return 0;
+  if (/prepaid|supplies on hand|inventory|cash|receivable|equipment|building|land|asset/.test(value)) return 0;
   if (/draw|withdraw/.test(value)) return 3;
-  if (/revenue|income|sales|service|interest earned|gain/.test(value)) return 4;
-  if (/expense|supplies used|depreciation|loss|rent|salary|wage|utilities|insurance|advertis|interest expense|bad debt/.test(value)) return 5;
-  if (/payable|loan|note payable|mortgage|unearned|liabilit/.test(value)) return 1;
+  if (/payable|loan|mortgage|unearned|liabilit|deferred revenue/.test(value)) return 1;
   if (/capital|equity|retained earning|owner/.test(value)) return 2;
+  if (/cost of (goods )?sales|cost of sales|expense|supplies used|depreciation|loss|rent|salary|wage|utilities|insurance|advertis|interest expense|bad debt/.test(value)) return 5;
+  if (/revenue|income|sales|service|interest earned|gain/.test(value)) return 4;
   return 0;
 };
 const trialBalanceCategoryNames = ['ASSETS', 'LIABILITIES', 'EQUITY / CAPITAL', 'DRAWINGS', 'INCOME / REVENUE', 'EXPENSES'];
+const toCents = (amount) => Math.round((Number(amount) || 0) * 100);
+function canonicalAccountName(name) {
+  const cleaned = String(name || '').trim();
+  const existing = entries.find((entry) => String(entry.account || '').trim().toLocaleLowerCase() === cleaned.toLocaleLowerCase());
+  return existing ? String(existing.account).trim() : cleaned;
+}
 const savedJournalId = new URLSearchParams(location.search).get('journal');
 let viewingSavedJournal = false;
-const finishResetKey = 'accounting-cycle-reset-workspace-after-save';
-if (!savedJournalId && localStorage.getItem(finishResetKey) === 'true') {
-  localStorage.removeItem(finishResetKey);
-  localStorage.removeItem(setupStorageKey);
-  localStorage.removeItem(storageKey);
-  localStorage.removeItem(legacyStorageKey);
-  localStorage.removeItem(draftStorageKey);
-  workspaceSetup = null;
-  storageKey = legacyStorageKey;
-  entries = [];
-}
 function readJournalArchive() {
   try {
     const value = JSON.parse(localStorage.getItem(journalArchiveKey) || '[]');
@@ -44,22 +41,38 @@ function readJournalArchive() {
       companies.set(companyId, record);
     });
     const normalized = [...companies.values()];
-    if (JSON.stringify(normalized) !== JSON.stringify(value)) localStorage.setItem(journalArchiveKey, JSON.stringify(normalized));
+    normalized.forEach((journal) => {
+      if (journal.companyId === journal.companyName.trim().toLocaleLowerCase()) {
+        journal.companyId = window.crypto?.randomUUID?.() || `company-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        journal.id = `company-${encodeURIComponent(journal.companyId)}`;
+        if (journal.workspace) journal.workspace = { ...journal.workspace, companyId: journal.companyId };
+      }
+    });
+    if (JSON.stringify(normalized) !== JSON.stringify(value)) safeSetItem(journalArchiveKey, JSON.stringify(normalized));
     return normalized;
   } catch { return []; }
+}
+if (workspaceSetup && !workspaceSetup.companyId) {
+  const matching = readJournalArchive().find((journal) => journal.companyName?.trim().toLocaleLowerCase() === workspaceSetup.companyName?.trim().toLocaleLowerCase());
+  if (matching?.companyId) {
+    workspaceSetup = { ...workspaceSetup, companyId: matching.companyId };
+    safeSetItem(setupStorageKey, JSON.stringify(workspaceSetup));
+  }
 }
 function archiveExistingEntries() {
   const archive = readJournalArchive();
   if (!entries.length) return;
   const companyName = workspaceSetup?.companyName || 'Company name';
-  const companyId = companyName.trim().toLocaleLowerCase();
+  const companyId = workspaceSetup?.companyId || companyName.trim().toLocaleLowerCase();
   const debits = entries.filter((entry) => entry.type === 'Debit');
   const lastDebit = debits.at(-1);
   if (!lastDebit) return;
   const existing = archive.find((journal) => journal.companyId === companyId || (!journal.companyId && journal.companyName?.trim().toLocaleLowerCase() === companyId));
-  const record = { id: existing?.id || `company-${encodeURIComponent(companyId)}`, companyId, companyName, workspace: workspaceSetup || null, date: getEntryDate(lastDebit), note: lastDebit.note || '', debitAccount: lastDebit.account, creditAccount: entries.filter((entry) => entry.type === 'Credit').at(-1)?.account || '', amount: Number(lastDebit.amount), entries: entries.slice() };
+  const mergedEntries = new Map();
+  [...(existing?.entries || []), ...entries].forEach((entry, index) => mergedEntries.set(entry.transactionId || `legacy-${index}-${entry.type}-${entry.account}-${entry.amount}`, entry));
+  const record = { id: existing?.id || `company-${encodeURIComponent(companyId)}`, companyId, companyName, workspace: workspaceSetup || null, date: getEntryDate(lastDebit), note: lastDebit.note || '', debitAccount: lastDebit.account, creditAccount: entries.filter((entry) => entry.type === 'Credit').at(-1)?.account || '', amount: Number(lastDebit.amount), entries: [...mergedEntries.values()] };
   if (existing) Object.assign(existing, record); else archive.unshift(record);
-  localStorage.setItem(journalArchiveKey, JSON.stringify(archive));
+  return safeSetItem(journalArchiveKey, JSON.stringify(archive));
 }
 function readTransactionDraft() {
   try { return JSON.parse(localStorage.getItem(draftStorageKey) || 'null'); } catch { return null; }
@@ -68,7 +81,7 @@ function updateTransactionDraft() {
   if (!form) return;
   const draft = Object.fromEntries(draftFields.map((id) => [id, document.getElementById(id)?.value || '']));
   const hasDetails = draftFields.slice(1).some((id) => draft[id].trim());
-  if (hasDetails) localStorage.setItem(draftStorageKey, JSON.stringify(draft));
+  if (hasDetails) safeSetItem(draftStorageKey, JSON.stringify(draft));
   else localStorage.removeItem(draftStorageKey);
 }
 const savedDraft = readTransactionDraft();
@@ -104,16 +117,20 @@ setupForm?.addEventListener('submit', (event) => {
   const asOfDate = setupForm.elements.asOfDate.value;
   const yearEndDate = setupForm.elements.yearEndDate.value;
   if (!companyName || !asOfDate || !yearEndDate) return;
+  if (asOfDate > yearEndDate) { if (setupError) setupError.textContent = 'The as of date must be on or before the year ended date.'; return; }
   const previousCompanyName = workspaceSetup?.companyName || '';
   const previousStorageKey = storageKey;
-  const nextStorageKey = transactionStorageKeyForCompany(companyName);
-  if (previousCompanyName.toLocaleLowerCase() !== companyName.toLocaleLowerCase()) {
-    if (!previousCompanyName && localStorage.getItem(nextStorageKey) === null) localStorage.setItem(nextStorageKey, JSON.stringify(entries));
+  const archive = readJournalArchive();
+  const matchingArchive = archive.find((journal) => (workspaceSetup?.companyId && journal.companyId === workspaceSetup.companyId) || (!workspaceSetup?.companyId && journal.companyName?.trim().toLocaleLowerCase() === previousCompanyName.trim().toLocaleLowerCase()) || (!previousCompanyName && journal.companyName?.trim().toLocaleLowerCase() === companyName.toLocaleLowerCase()));
+  const companyId = workspaceSetup?.companyId || matchingArchive?.companyId || (window.crypto?.randomUUID?.() || `company-${Date.now()}-${Math.random().toString(16).slice(2)}`);
+  const nextStorageKey = transactionStorageKeyForCompany(companyName, companyId);
+  if (previousStorageKey !== nextStorageKey) {
+    if (localStorage.getItem(nextStorageKey) === null || previousCompanyName.toLocaleLowerCase() !== companyName.toLocaleLowerCase()) safeSetItem(nextStorageKey, JSON.stringify(entries));
     storageKey = nextStorageKey;
     try { entries = JSON.parse(localStorage.getItem(storageKey) || '[]'); if (!Array.isArray(entries)) entries = []; } catch { entries = []; }
   }
-  workspaceSetup = { companyName, asOfDate, yearEndDate };
-  localStorage.setItem(setupStorageKey, JSON.stringify(workspaceSetup));
+  workspaceSetup = { companyId, companyName, asOfDate, yearEndDate };
+  if (!safeSetItem(setupStorageKey, JSON.stringify(workspaceSetup))) { if (setupError) setupError.textContent = 'Could not save workspace settings on this device.'; return; }
   const settingsButton = document.getElementById('editWorkspaceSetup');
   if (settingsButton) settingsButton.textContent = 'Workspace settings';
   const companyNameDisplay = document.getElementById('workspaceCompanyName');
@@ -123,12 +140,24 @@ setupForm?.addEventListener('submit', (event) => {
   document.querySelector('.workspace-page > .topbar')?.removeAttribute('inert');
   document.querySelector('.workspace-page > .professional-footer')?.removeAttribute('inert');
   const entryDate = document.getElementById('entryDate');
-  if (entryDate && !entryDate.value) entryDate.value = asOfDate;
+  if (entryDate) { entryDate.min = asOfDate; entryDate.max = yearEndDate; if (!entryDate.value) entryDate.value = asOfDate; }
   renderEntries();
   renderTrialBalance();
-  if (previousStorageKey !== storageKey) localStorage.setItem(storageKey, JSON.stringify(entries));
+  if (previousStorageKey !== storageKey) safeSetItem(storageKey, JSON.stringify(entries));
 });
 document.getElementById('editWorkspaceSetup')?.addEventListener('click', openWorkspaceSetup);
+document.getElementById('startNewCompany')?.addEventListener('click', () => {
+  if (!window.confirm('Start a new company workspace? Current entries will be saved to the journal archive first.')) return;
+  if (entries.length && !archiveExistingEntries()) {
+    if (status) { status.textContent = 'Could not save the current journal. Free storage space before starting a new company.'; status.className = 'journal-status error'; }
+    return;
+  }
+  try { localStorage.removeItem(setupStorageKey); localStorage.removeItem(draftStorageKey); } catch { /* Continue into setup even when storage is unavailable. */ }
+  workspaceSetup = null;
+  storageKey = legacyStorageKey;
+  entries = [];
+  openWorkspaceSetup();
+});
 document.getElementById('cancelSetup')?.addEventListener('click', () => {
   location.href = 'index.html';
 });
@@ -177,7 +206,7 @@ function renderEntries() {
   if (journalSummaryStatus) journalSummaryStatus.textContent = !journalGroups.length ? 'No entries yet.' : balanced ? 'All journal entries are balanced.' : 'Debits and credits differ.';
   document.getElementById('entryCount')?.replaceChildren(document.createTextNode(String(journalGroups.length)));
   document.getElementById('emptyJournal')?.classList.toggle('is-hidden', journalGroups.length > 0);
-  if (!viewingSavedJournal) localStorage.setItem(storageKey, JSON.stringify(entries));
+  if (!viewingSavedJournal) safeSetItem(storageKey, JSON.stringify(entries));
   renderTrialBalance();
   if (!journalGroups.length) {
     const ledgerSection = document.getElementById('ledgerSection');
@@ -190,23 +219,24 @@ function renderTrialBalance() {
   const accounts = new Map();
   entries.forEach((entry) => {
     const name = String(entry.account || 'Unnamed account').trim() || 'Unnamed account';
-    const account = accounts.get(name) || { debit: 0, credit: 0 };
-    account[entry.type === 'Debit' ? 'debit' : 'credit'] += Number(entry.amount) || 0;
-    accounts.set(name, account);
+    const key = name.toLocaleLowerCase();
+    const account = accounts.get(key) || { name, debit: 0, credit: 0 };
+    account[entry.type === 'Debit' ? 'debit' : 'credit'] += toCents(entry.amount);
+    accounts.set(key, account);
   });
   const groups = trialBalanceCategoryNames.map(() => []);
-  for (const [name, account] of accounts) {
-    const net = Math.round((account.debit - account.credit) * 100) / 100;
-    if (Math.abs(net) < 0.005) continue;
-    groups[trialBalanceCategory(name)].push({ name, debit: net > 0 ? net : 0, credit: net < 0 ? -net : 0 });
+  for (const account of accounts.values()) {
+    const net = account.debit - account.credit;
+    if (!net) continue;
+    groups[trialBalanceCategory(account.name)].push({ name: account.name, debit: net > 0 ? net / 100 : 0, credit: net < 0 ? -net / 100 : 0 });
   }
   groups.forEach((group) => group.sort((a, b) => a.name.localeCompare(b.name)));
   const fmt = (amount) => amount ? formatCurrency(amount) : '';
-  let debitTotal = 0, creditTotal = 0;
+  let debitTotalCents = 0, creditTotalCents = 0;
   body.innerHTML = groups.map((group) => {
     if (!group.length) return '';
     const accountRows = group.map((account) => {
-      debitTotal += account.debit; creditTotal += account.credit;
+      debitTotalCents += toCents(account.debit); creditTotalCents += toCents(account.credit);
       return `<tr><td>${escapeHTML(account.name)}</td><td class="tb-debit">${fmt(account.debit)}</td><td class="tb-credit">${fmt(account.credit)}</td></tr>`;
     }).join('');
     return accountRows;
@@ -214,8 +244,8 @@ function renderTrialBalance() {
   const hasAccounts = groups.some((group) => group.length);
   document.getElementById('tbTableWrap').hidden = !hasAccounts;
   document.getElementById('tbAccountCount').textContent = String(accounts.size);
-  document.getElementById('tbDebitTotal').textContent = formatCurrency(debitTotal);
-  document.getElementById('tbCreditTotal').textContent = formatCurrency(creditTotal);
+  document.getElementById('tbDebitTotal').textContent = formatCurrency(debitTotalCents / 100);
+  document.getElementById('tbCreditTotal').textContent = formatCurrency(creditTotalCents / 100);
   const company = workspaceSetup?.companyName || 'Company name';
   document.getElementById('tbCompanyName').textContent = company;
   document.getElementById('tbAccountingDate').textContent = workspaceSetup?.asOfDate ? `As of ${formatDate(workspaceSetup.asOfDate)}` : `As of ${formatDate(today)}`;
@@ -229,26 +259,28 @@ function renderLedger() {
   const accounts = new Map();
   entries.forEach((entry) => {
     const name = String(entry.account || 'Unnamed account').trim() || 'Unnamed account';
-    const account = accounts.get(name) || { debit: 0, credit: 0, rows: [] };
-    const amount = Number(entry.amount) || 0;
+    const key = name.toLocaleLowerCase();
+    const account = accounts.get(key) || { name, debit: 0, credit: 0, rows: [] };
+    const amount = toCents(entry.amount);
     const isDebit = entry.type === 'Debit';
     account[isDebit ? 'debit' : 'credit'] += amount;
     account.rows.push({ date: getEntryDate(entry), note: entry.note || '', debit: isDebit ? amount : null, credit: isDebit ? null : amount });
-    accounts.set(name, account);
+    accounts.set(key, account);
   });
-  const sortedAccounts = [...accounts.entries()].sort(([a], [b]) => a.localeCompare(b));
+  const sortedAccounts = [...accounts.values()].sort((a, b) => a.name.localeCompare(b.name));
   const count = document.getElementById('ledgerAccountCount');
   if (count) count.textContent = String(sortedAccounts.length);
   if (accountFilter) {
-    accountFilter.innerHTML = `<option value="">All Accounts</option>${sortedAccounts.map(([name]) => `<option value="${escapeHTML(name)}">${escapeHTML(name)}</option>`).join('')}`;
-    if (sortedAccounts.some(([name]) => name === selectedAccount)) accountFilter.value = selectedAccount;
+    accountFilter.innerHTML = `<option value="">All Accounts</option>${sortedAccounts.map(({ name }) => `<option value="${escapeHTML(name)}">${escapeHTML(name)}</option>`).join('')}`;
+    if (sortedAccounts.some(({ name }) => name === selectedAccount)) accountFilter.value = selectedAccount;
   }
-  const visibleAccounts = sortedAccounts.filter(([name]) => (!selectedAccount || name === selectedAccount) && (!searchTerm || name.toLocaleLowerCase().includes(searchTerm)));
-  ledgerAccounts.innerHTML = visibleAccounts.length ? visibleAccounts.map(([name, account]) => {
-    const rowsHTML = account.rows.sort((a, b) => a.date.localeCompare(b.date)).map((row) => `<tr><td><span>${formatDate(row.date)}</span>${row.note ? `<small>${escapeHTML(row.note)}</small>` : ''}</td><td class="ledger-debit">${row.debit === null ? '' : formatCurrency(row.debit)}</td><td class="ledger-credit">${row.credit === null ? '' : formatCurrency(row.credit)}</td></tr>`).join('');
+  const visibleAccounts = sortedAccounts.filter(({ name }) => (!selectedAccount || name === selectedAccount) && (!searchTerm || name.toLocaleLowerCase().includes(searchTerm)));
+  ledgerAccounts.innerHTML = visibleAccounts.length ? visibleAccounts.map((account) => {
+    const name = account.name;
+    const rowsHTML = account.rows.sort((a, b) => a.date.localeCompare(b.date)).map((row) => `<tr><td><span>${formatDate(row.date)}</span>${row.note ? `<small>${escapeHTML(row.note)}</small>` : ''}</td><td class="ledger-debit">${row.debit === null ? '' : formatCurrency(row.debit / 100)}</td><td class="ledger-credit">${row.credit === null ? '' : formatCurrency(row.credit / 100)}</td></tr>`).join('');
     const balance = Math.abs(account.debit - account.credit);
     const balanceLabel = account.debit === account.credit ? 'Balanced' : account.debit > account.credit ? 'Debit balance' : 'Credit balance';
-    return `<article class="ledger-account-card"><div class="ledger-account-title"><h3>${escapeHTML(name)}</h3><span>${account.rows.length} ${account.rows.length === 1 ? 'entry' : 'entries'}</span></div><div class="t-account-scroll"><table class="t-account-table"><thead><tr><th>Date / Note</th><th>Debit</th><th>Credit</th></tr></thead><tbody>${rowsHTML}</tbody><tfoot><tr><th>Total</th><th>${formatCurrency(account.debit)}</th><th>${formatCurrency(account.credit)}</th></tr></tfoot></table></div><div class="ledger-balance"><span>${balanceLabel}</span><strong>${formatCurrency(balance)}</strong></div></article>`;
+    return `<article class="ledger-account-card"><div class="ledger-account-title"><h3>${escapeHTML(name)}</h3><span>${account.rows.length} ${account.rows.length === 1 ? 'entry' : 'entries'}</span></div><div class="t-account-scroll"><table class="t-account-table"><thead><tr><th>Date / Note</th><th>Debit</th><th>Credit</th></tr></thead><tbody>${rowsHTML}</tbody><tfoot><tr><th>Total</th><th>${formatCurrency(account.debit / 100)}</th><th>${formatCurrency(account.credit / 100)}</th></tr></tfoot></table></div><div class="ledger-balance"><span>${balanceLabel}</span><strong>${formatCurrency(balance / 100)}</strong></div></article>`;
   }).join('') : '<p class="ledger-no-results">No accounts match these filters.</p>';
 }
 document.getElementById('ledgerSearch')?.addEventListener('input', renderLedger);
@@ -256,14 +288,15 @@ document.getElementById('ledgerAccountFilter')?.addEventListener('change', rende
 form?.addEventListener('submit', (event) => {
   event.preventDefault();
   if (!requireWorkspace()) return;
-  const debitAccount = document.getElementById('debitAccountName').value.trim();
+  const debitAccount = canonicalAccountName(document.getElementById('debitAccountName').value);
   const debitAmount = Number(document.getElementById('debitAmountValue').value);
-  const creditAccount = document.getElementById('creditAccountName').value.trim();
+  const creditAccount = canonicalAccountName(document.getElementById('creditAccountName').value);
   const creditAmount = Number(document.getElementById('creditAmountValue').value);
   const entryDate = document.getElementById('entryDate')?.value;
   const note = document.getElementById('entryNote')?.value.trim() || '';
   if (!debitAccount || !creditAccount || !Number.isFinite(debitAmount) || !Number.isFinite(creditAmount) || debitAmount <= 0 || creditAmount <= 0 || !entryDate) { status.textContent = 'Complete the date, both accounts, and both amounts.'; status.className = 'journal-status error'; return; }
   if (Math.round(debitAmount * 100) !== Math.round(creditAmount * 100)) { status.textContent = 'Debit and credit amounts must match before you add this entry.'; status.className = 'journal-status error'; return; }
+  if (workspaceSetup?.asOfDate && (entryDate < workspaceSetup.asOfDate || entryDate > workspaceSetup.yearEndDate)) { status.textContent = `Transaction date must fall between ${formatDate(workspaceSetup.asOfDate)} and ${formatDate(workspaceSetup.yearEndDate)}.`; status.className = 'journal-status error'; return; }
   const transactionId = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   entries.push({ transactionId, account: debitAccount, amount: debitAmount, type: 'Debit', note, entryDate });
   entries.push({ transactionId, account: creditAccount, amount: creditAmount, type: 'Credit', note, entryDate });
@@ -279,16 +312,13 @@ document.getElementById('finishJournal')?.addEventListener('click', () => {
     if (status) { status.textContent = 'Add at least one journal entry before viewing the ledger.'; status.className = 'journal-status error'; }
     return;
   }
-  archiveExistingEntries();
-  const companyId = (workspaceSetup?.companyName || '').trim().toLocaleLowerCase();
+  if (!archiveExistingEntries()) {
+    if (status) { status.textContent = 'Could not save this journal on the device. Free storage space and try again.'; status.className = 'journal-status error'; }
+    return;
+  }
+  const companyId = workspaceSetup?.companyId || (workspaceSetup?.companyName || '').trim().toLocaleLowerCase();
   const saved = readJournalArchive().find((journal) => journal.companyId === companyId);
   if (!saved) return;
-  entries = [];
-  localStorage.removeItem(setupStorageKey);
-  localStorage.removeItem(storageKey);
-  localStorage.removeItem(legacyStorageKey);
-  localStorage.removeItem(draftStorageKey);
-  localStorage.setItem(finishResetKey, 'true');
   location.href = `transactions.html?journal=${encodeURIComponent(saved.id)}`;
 });
 document.getElementById('backToJournal')?.addEventListener('click', () => {
@@ -300,12 +330,13 @@ document.getElementById('clearEntries')?.addEventListener('click', () => {
   entries = [];
   renderEntries();
 });
-window.addEventListener('storage', (event) => { if (event.key === storageKey) { try { entries = JSON.parse(event.newValue || '[]'); } catch { entries = []; } renderEntries(); } });
+window.addEventListener('storage', (event) => { if (!viewingSavedJournal && event.key === storageKey) { try { entries = JSON.parse(event.newValue || '[]'); } catch { entries = []; } renderEntries(); } });
 window.addEventListener('storage', (event) => {
+  if (viewingSavedJournal) return;
   if (event.key === setupStorageKey) {
     const previousKey = storageKey;
     try { workspaceSetup = JSON.parse(event.newValue || 'null'); } catch { workspaceSetup = null; }
-    storageKey = workspaceSetup?.companyName ? transactionStorageKeyForCompany(workspaceSetup.companyName) : legacyStorageKey;
+    storageKey = workspaceSetup?.companyName ? transactionStorageKeyForCompany(workspaceSetup.companyName, workspaceSetup.companyId) : legacyStorageKey;
     if (storageKey !== previousKey) {
       try { entries = JSON.parse(localStorage.getItem(storageKey) || '[]'); if (!Array.isArray(entries)) entries = []; } catch { entries = []; }
       renderEntries();
@@ -318,6 +349,8 @@ window.addEventListener('storage', (event) => {
     }
     const companyNameDisplay = document.getElementById('workspaceCompanyName');
     if (companyNameDisplay && workspaceSetup) companyNameDisplay.textContent = `${workspaceSetup.companyName} · Journal period through ${formatDate(workspaceSetup.yearEndDate)}`;
+    const entryDate = document.getElementById('entryDate');
+    if (entryDate) { entryDate.min = workspaceSetup?.asOfDate || ''; entryDate.max = workspaceSetup?.yearEndDate || ''; }
     renderTrialBalance();
   }
 });
@@ -325,7 +358,7 @@ if (workspaceSetup) {
   const companyNameDisplay = document.getElementById('workspaceCompanyName');
   if (companyNameDisplay) companyNameDisplay.textContent = `${workspaceSetup.companyName} · Journal period through ${formatDate(workspaceSetup.yearEndDate)}`;
   const entryDate = document.getElementById('entryDate');
-  if (entryDate && !entryDate.value) entryDate.value = workspaceSetup?.asOfDate || today;
+  if (entryDate) { entryDate.min = workspaceSetup?.asOfDate || ''; entryDate.max = workspaceSetup?.yearEndDate || ''; if (!entryDate.value) entryDate.value = workspaceSetup?.asOfDate || today; }
 }
 else {
   const entryDate = document.getElementById('entryDate');
@@ -341,13 +374,13 @@ if (savedJournalId) {
     document.querySelector('.workspace-heading > div > p:not(.eyebrow)').textContent = saved.companyName;
     document.querySelector('.entry-card').hidden = true;
     document.getElementById('savedJournalViews').hidden = false;
+    document.getElementById('editWorkspaceSetup').hidden = true;
+    document.getElementById('startNewCompany').hidden = true;
     document.querySelector('.journal-card #clearEntries')?.remove();
     document.querySelector('.workspace-heading-actions')?.insertAdjacentHTML('beforeend', '<a class="text-button" href="journals.html">← All Journals</a>');
     const ledgerSection = document.getElementById('ledgerSection');
     if (ledgerSection) ledgerSection.hidden = false;
     document.getElementById('TrialBalanceSection')?.removeAttribute('hidden');
-    document.getElementById('ledgerSearch')?.setAttribute('disabled', '');
-    document.getElementById('ledgerAccountFilter')?.setAttribute('disabled', '');
   }
 }
 else if (!workspaceSetup) {

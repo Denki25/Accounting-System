@@ -22,6 +22,15 @@
     <div class="workspace-heading"><div><p class="eyebrow">Accounting workspace</p><h1>Saved Journals</h1><p>Open a saved transaction to review its journal entries, general ledger, and unadjusted trial balance.</p></div><a href="transactions.html" class="btn btn-solid">＋ Add transaction</a></div>
     <p id="journalLibraryStatus" class="journal-library-status" role="status" aria-live="polite"></p>
     <section id="savedJournalList" class="saved-journal-grid" aria-label="Saved journals"></section>
+    <dialog id="deleteJournalDialog" class="delete-journal-dialog" aria-labelledby="deleteJournalTitle" aria-describedby="deleteJournalDescription">
+      <div class="delete-dialog-icon" aria-hidden="true">!</div>
+      <h2 id="deleteJournalTitle">Delete saved journal?</h2>
+      <p id="deleteJournalDescription">This will permanently remove the saved journal for <strong id="deleteJournalCompany"></strong>.</p>
+      <form id="deleteJournalForm" method="dialog" class="delete-dialog-actions">
+        <button type="submit" class="delete-dialog-cancel" value="cancel">Keep journal</button>
+        <button type="submit" class="delete-dialog-confirm" value="delete">Delete journal</button>
+      </form>
+    </dialog>
     <a class="back-link" href="transactions.html">← Back to transactions</a>
   </main>
   <footer class="site-footer professional-footer"><div class="shell footer-inner"><a class="footer-brand" href="index.html"><img src="assets/tamaraw-wordmark.png" alt="TAMARAW" class="brand-wordmark" /></a><p class="footer-note">A clearer way to follow every transaction.</p><small class="footer-copyright">© 2026 TAMARAW</small></div></footer>

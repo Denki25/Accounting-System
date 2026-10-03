@@ -15,4 +15,18 @@
 .journal-library-empty > span { display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: #f1f5f9; font-size: 1.4rem; }
 .journal-library-empty h2 { margin-bottom: 6px; }
 .journal-library-empty p { color: #64748b; margin: 0 0 20px; }
+.delete-journal-dialog { width: min(440px, calc(100vw - 32px)); border: 1px solid #e5eaf1; border-radius: 22px; padding: 30px; color: #16253c; background: #fff; box-shadow: 0 28px 90px rgba(15, 35, 66, .26); }
+.delete-journal-dialog::backdrop { background: rgba(13, 27, 48, .52); backdrop-filter: blur(4px); }
+.delete-dialog-icon { display: grid; place-items: center; width: 46px; height: 46px; margin-bottom: 19px; border-radius: 15px; color: #b42318; background: #fff0ee; font-size: 1.3rem; font-weight: 800; }
+.delete-journal-dialog h2 { margin: 0; color: #142943; font-size: 1.35rem; letter-spacing: -.025em; }
+.delete-journal-dialog p { margin: 10px 0 24px; color: #617087; line-height: 1.55; }
+.delete-journal-dialog p strong { color: #34445b; overflow-wrap: anywhere; }
+.delete-dialog-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.delete-dialog-actions button { min-height: 44px; padding: 0 17px; border-radius: 11px; font: inherit; font-size: .91rem; font-weight: 700; cursor: pointer; transition: transform .16s, background .16s, box-shadow .16s; }
+.delete-dialog-actions button:hover { transform: translateY(-1px); }
+.delete-dialog-cancel { border: 1px solid #dce3ed; color: #43536a; background: #fff; }
+.delete-dialog-cancel:hover { background: #f7f9fc; }
+.delete-dialog-confirm { border: 1px solid #a91f17; color: #fff; background: #b42318; box-shadow: 0 5px 12px rgba(180, 35, 24, .17); }
+.delete-dialog-confirm:hover { background: #991b1b; }
+.delete-dialog-actions button:focus-visible { outline: 3px solid #86b7f5; outline-offset: 2px; }
 @media (max-width: 600px) { .journals-page { padding-top: 30px; } .saved-journal-card { padding: 18px; } }
